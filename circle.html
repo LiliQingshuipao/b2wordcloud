@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>适配正方形</title>
+    <style>
+        html, body, .test{
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+        #chart, #chart2 {
+            width: 500px;
+            height: 500px;
+            margin: 0 auto
+        }
+    </style>
+</head>
+<body>
+    <div class="test">
+        <h1>吸收</h1>
+        <div id="chart"></div>
+    </div>
+    <script src="dist/b2wordcloud.js"></script>
+    <script>
+         var keywords = {
+            "visualMap": 22199,
+            "continuous": 10288,
+            "contoller": 620,
+            "series": 274470,
+            "gauge": 12311,
+            "detail": 1206,
+            "piecewise": 4885,
+            "textStyle": 32294,
+            "markPoint": 18574,
+            "pie": 38929,
+            "roseType": 969,
+            "label": 37517,
+            "emphasis": 12053,
+            "yAxis": 57299,
+            "name": 15418,
+            "type": 22905,
+            "gridIndex": 5146,
+            "normal": 49487,
+            "itemStyle": 33837,
+            "min": 4500,
+            "silent": 5744,
+            "animation": 4840,
+            "offsetCenter": 232,
+            "inverse": 3706,
+            "borderColor": 4812,
+            "markLine": 16578,
+            "line": 76970,
+            "radiusAxis": 6704,
+            "radar": 15964,
+            "data": 60679,
+            "dataZoom": 24347,
+            "tooltip": 43420,
+            "toolbox": 25222,
+            "geo": 16904,
+            "parallelAxis": 4029,
+            "parallel": 5319,
+            "max": 3393,
+            "bar": 43066,
+            "heatmap": 3110,
+            "map": 20285,
+            "animationDuration": 3425,
+            "animationDelay": 2431,
+            "splitNumber": 5175,
+            "axisLine": 12738,
+            "lineStyle": 19601,
+            "splitLine": 7133,
+            "axisTick": 8831,
+            "axisLabel": 17516,
+            "pointer": 590,
+            "color": 23426,
+            "title": 38497,
+            "formatter": 15214,
+            "slider": 7236,
+            "legend": 66514,
+            "grid": 28516,
+            "smooth": 1295,
+            "smoothMonotone": 696,
+            "sampling": 757,
+            "feature": 12815,
+            "saveAsImage": 2616,
+            "polar": 6279,
+            "calculable": 879,
+            "backgroundColor": 9419,
+            "excludeComponents": 130,
+            "show": 20620,
+            "text": 2592,
+            "icon": 2782,
+            "dimension": 478,
+            "inRange": 1060,
+            "animationEasing": 2983,
+            "animationDurationUpdate": 2259,
+            "animationDelayUpdate": 2236,
+            "animationEasingUpdate": 2213,
+            "xAxis": 89459,
+            "angleAxis": 5469,
+            "showTitle": 484,
+            "dataView": 2754,
+            "restore": 932,
+            "timeline": 10104,
+            "range": 477,
+            "value": 5732,
+            "precision": 878,
+            "target": 1433,
+            "zlevel": 5361,
+            "symbol": 8718,
+            "interval": 7964,
+            "symbolSize": 5300,
+            "showSymbol": 1247,
+            "inside": 8913,
+            "xAxisIndex": 3843,
+            "orient": 4205,
+            "boundaryGap": 5073,
+            "nameGap": 4896,
+            "zoomLock": 571,
+            "hoverAnimation": 2307,
+            "legendHoverLink": 3553,
+            "stack": 2907,
+            "throttle": 466,
+            "connectNulls": 897,
+            "clipOverflow": 826,
+            "startValue": 551,
+            "minInterval": 3292,
+            "opacity": 3097,
+            "splitArea": 4775,
+            "filterMode": 635,
+            "end": 409,
+            "left": 6475,
+            "funnel": 2238,
+            "lines": 6403,
+            "baseline": 431,
+            "align": 2608,
+            "coord": 897,
+            "nameTextStyle": 7477,
+            "width": 4338,
+            "shadowBlur": 4493,
+            "effect": 929,
+            "period": 225,
+            "areaColor": 631,
+            "borderWidth": 3654,
+            "nameLocation": 4418,
+            "position": 11723,
+            "containLabel": 1701,
+            "scatter": 10718,
+            "areaStyle": 5310,
+            "scale": 3859,
+            "pieces": 414,
+            "categories": 1000,
+            "selectedMode": 3825,
+            "itemSymbol": 273,
+            "effectScatter": 7147,
+            "fontStyle": 3376,
+            "fontSize": 3386,
+            "margin": 1034,
+            "iconStyle": 2257,
+            "link": 1366,
+            "axisPointer": 5245,
+            "showDelay": 896,
+            "graph": 22194,
+            "subtext": 1442,
+            "selected": 2881,
+            "barCategoryGap": 827,
+            "barGap": 1094,
+            "barWidth": 1521,
+            "coordinateSystem": 3622,
+            "barBorderRadius": 284,
+            "z": 4014,
+            "polarIndex": 1456,
+            "shadowOffsetX": 3046,
+            "shadowColor": 3771,
+            "shadowOffsetY": 2475,
+            "height": 1988,
+            "barMinHeight": 575,
+            "lang": 131,
+            "symbolRotate": 2752,
+            "symbolOffset": 2549,
+            "showAllSymbol": 942,
+            "transitionDuration": 993,
+            "bottom": 3724,
+            "fillerColor": 229,
+            "nameMap": 1249,
+            "barMaxWidth": 747,
+            "radius": 2103,
+            "center": 2425,
+            "magicType": 3276,
+            "labelPrecision": 248,
+            "option": 654,
+            "seriesIndex": 935,
+            "controlPosition": 121,
+            "itemGap": 3188,
+            "padding": 3481,
+            "shadowStyle": 347,
+            "boxplot": 1394,
+            "labelFormatter": 264,
+            "realtime": 631,
+            "dataBackgroundColor": 239,
+            "showDetail": 247,
+            "showDataShadow": 217,
+            "x": 684,
+            "valueDim": 499,
+            "onZero": 931,
+            "right": 3255,
+            "clockwise": 1035,
+            "itemWidth": 1732,
+            "trigger": 3840,
+            "axis": 379,
+            "selectedOffset": 670,
+            "startAngle": 1293,
+            "minAngle": 590,
+            "top": 4637,
+            "avoidLabelOverlap": 870,
+            "labelLine": 3785,
+            "sankey": 2933,
+            "endAngle": 213,
+            "start": 779,
+            "roam": 1738,
+            "fontWeight": 2828,
+            "fontFamily": 2490,
+            "subtextStyle": 2066,
+            "indicator": 853,
+            "sublink": 708,
+            "zoom": 1038,
+            "subtarget": 659,
+            "length": 1060,
+            "itemSize": 505,
+            "controlStyle": 452,
+            "yAxisIndex": 2529,
+            "edgeLabel": 1188,
+            "radiusAxisIndex": 354,
+            "scaleLimit": 1313,
+            "geoIndex": 535,
+            "regions": 1892,
+            "itemHeight": 1290,
+            "nodes": 644,
+            "candlestick": 3166,
+            "crossStyle": 466,
+            "edges": 369,
+            "links": 3277,
+            "layout": 846,
+            "barBorderColor": 721,
+            "barBorderWidth": 498,
+            "treemap": 3865,
+            "y": 367,
+            "valueIndex": 704,
+            "showLegendSymbol": 482,
+            "mapValueCalculation": 492,
+            "optionToContent": 264,
+            "handleColor": 187,
+            "handleSize": 271,
+            "showContent": 1853,
+            "angleAxisIndex": 406,
+            "endValue": 327,
+            "triggerOn": 1720,
+            "contentToOption": 169,
+            "buttonColor": 71,
+            "rotate": 1144,
+            "hoverLink": 335,
+            "outOfRange": 491,
+            "textareaColor": 58,
+            "textareaBorderColor": 58,
+            "textColor": 60,
+            "buttonTextColor": 66,
+            "category": 336,
+            "hideDelay": 786,
+            "alwaysShowContent": 1267,
+            "extraCssText": 901,
+            "effectType": 277,
+            "force": 1820,
+            "rippleEffect": 723,
+            "edgeSymbolSize": 329,
+            "showEffectOn": 271,
+            "gravity": 199,
+            "edgeLength": 193,
+            "layoutAnimation": 152,
+            "length2": 169,
+            "enterable": 957,
+            "dim": 83,
+            "readOnly": 143,
+            "levels": 444,
+            "textGap": 256,
+            "pixelRatio": 84,
+            "nodeScaleRatio": 232,
+            "draggable": 249,
+            "brushType": 158,
+            "radarIndex": 152,
+            "large": 182,
+            "edgeSymbol": 675,
+            "largeThreshold": 132,
+            "leafDepth": 73,
+            "childrenVisibleMin": 73,
+            "minSize": 35,
+            "maxSize": 35,
+            "sort": 90,
+            "funnelAlign": 61,
+            "source": 336,
+            "nodeClick": 200,
+            "curveness": 350,
+            "areaSelectStyle": 104,
+            "parallelIndex": 52,
+            "initLayout": 359,
+            "trailLength": 116,
+            "boxWidth": 20,
+            "back": 53,
+            "rewind": 110,
+            "zoomToNodeRatio": 80,
+            "squareRatio": 60,
+            "parallelAxisDefault": 358,
+            "checkpointStyle": 440,
+            "nodeWidth": 49,
+            "color0": 62,
+            "layoutIterations": 56,
+            "nodeGap": 54,
+            "color(Array": 76,
+            "<string>)": 76,
+            "repulsion": 276,
+            "tiled": 105,
+            "currentIndex": 145,
+            "axisType": 227,
+            "loop": 97,
+            "playInterval": 112,
+            "borderColor0": 23,
+            "gap": 43,
+            "autoPlay": 123,
+            "showPlayBtn": 25,
+            "breadcrumb": 119,
+            "colorMappingBy": 85,
+            "id": 18,
+            "blurSize": 85,
+            "minOpacity": 50,
+            "maxOpacity": 54,
+            "prevIcon": 12,
+            "children": 21,
+            "shape": 98,
+            "nextIcon": 12,
+            "showNextBtn": 17,
+            "stopIcon": 21,
+            "visibleMin": 83,
+            "visualDimension": 97,
+            "colorSaturation": 56,
+            "colorAlpha": 66,
+            "emptyItemWidth": 10,
+            "inactiveOpacity": 4,
+            "activeOpacity": 4,
+            "showPrevBtn": 19,
+            "playIcon": 26,
+            "ellipsis": 19,
+            "gapWidth": 19,
+            "borderColorSaturation": 10,
+            "handleIcon": 2,
+            "handleStyle": 6,
+            "borderType": 1,
+            "constantSpeed": 1,
+            "polyline": 2,
+            "blendMode": 1,
+            "dataBackground": 1,
+            "textAlign": 1,
+            "textBaseline": 1,
+            "brush": 3
+        };
+        var wordsStr = `广州	4762
+深圳	4457
+朝阳区	3879
+东城区	3387
+南京	2954
+成都	2374
+海淀区	2321
+杭州	2139
+武汉	1671
+长沙	1359
+西安	1161
+郑州	1060
+厦门	958
+黄浦区	887
+沈阳	876
+浦东新区	802
+济南	706
+福州	639
+青岛	628
+哈尔滨	620
+苏州	617
+合肥	608
+石家庄	504
+太原	486
+昆明	448
+静安区	447
+长春	438
+温州	434
+徐汇区	426
+西城区	416
+宁波	409
+南宁	396
+贵阳	384
+南昌	346
+海口	340
+镇江	328
+和平区	325
+唐山	311
+惠州	311
+临沂	310
+泉州	305
+无锡	300
+烟台	291
+大连	284
+绍兴	283
+丰台区	281
+渝北区	278
+中山	270
+虹口区	267
+台州	242
+兰州	237
+佛山	224
+洛阳	216
+珠海	214
+汕头	203
+邯郸	199
+长宁区	188
+闵行区	181
+南通	175
+东莞	168
+沙坪坝区	168
+三亚	159
+淮安	159
+西青区	159
+保定	156
+徐州	152
+昌平区	145
+通州区	145
+济宁	140
+东营	137
+漳州	131
+杨浦区	128
+普陀区	126
+鞍山	126
+宣武区	122
+南开区	121
+盐城	117
+嘉兴	115
+汉沽区	115
+河西区	113
+金华	112
+揭阳	109
+常州	105
+宝鸡	102
+淄博	102
+湛江	102
+咸阳	101
+桂林	101
+松江区	97
+沧州	96
+渝中区	96
+呼和浩特	91
+南岸区	89
+九龙坡区	87
+运城	86
+绵阳	84
+岳阳	83
+乌鲁木齐	81
+聊城	78
+榆林	76
+石景山区	76
+宝山区	73
+泰安	73
+江门	71
+潍坊	71
+威海	70
+湖州	70
+扬州	69
+赣州	68
+万州区	65
+郴州	65
+河东区	59
+廊坊	57
+泰州	56
+宜昌	54
+芜湖	53
+邢台	53
+江北区	52
+崇文区	51
+大渡口区	50
+梅州	49
+大兴区	47
+柳州	47
+襄樊	47
+银川	47
+嘉定区	45
+顺义区	43
+西宁	41
+卢湾区	40
+滨州	39
+南阳	37
+衡阳	37
+青浦区	36
+龙岩	36
+株洲	35
+吉林	34
+奉贤区	33
+秦皇岛	32
+包头	31
+江津市	31
+永川区	30
+闸北区	30
+德阳	28
+大庆	25
+怀柔区	24
+鄂尔多斯	23
+平谷区	22
+齐齐哈尔	22
+常德	21
+连云港	21
+北辰区	20
+河北区	19
+舟山	18
+武清区	17
+红桥区	16
+东丽区	14
+北碚区	14
+房山区	13
+宝坻区	12
+开县	12
+津南区	12
+门头沟区	12
+金山区	11
+长寿区	11
+塘沽区	9
+宁河县	9
+涪陵区	8
+黔江区	8
+大兴安岭	7
+南汇区	6
+巴南区	6
+垫江县	5
+铜梁县	5
+崇明县	4
+静海县	4
+蓟县	3
+万盛区	2
+奉节县	2
+密云县	2
+云阳县	1
+大港区	1
+大足县	1
+巫溪县	1`
+        var words = wordsStr.split('\n').map(r => r.split('\t')).slice(0, 100)
+        var mark = 0;
+        var idx = 1032
+        // var list = []
+        var list2 = [
+            ['测试', 104],
+            ['日常', 85],
+            ['粉质', 83],
+            ['温柔', 81],
+            ['配色', 80],
+            ['百搭', 54],
+            ['自然', 51],
+            ['细腻', 48],
+            ['珠光', 46],
+            ['哑光', 45],
+            ['气质', 35],
+            ['显色', 33],
+            ['大地色', 32],
+            ['粉嫩', 31],
+            ['亮片', 30],
+            ['消肿', 27],
+            ['少女', 21],
+            ['粉色', 20],
+            ['通勤', 19],
+            ['质地', 19],
+            ['肿眼泡', 16],
+            ['深邃', 15],
+            ['粉棕', 15],
+            ['黄皮', 15],
+            ['不飞粉', 12],
+        ]
+        var list1 = [
+            ['清爽', 164],
+            ['保湿', 160],
+            ['洗面奶', 155],
+            ['清洁', 142],
+            ['温和', 136],
+            ['乳液', 124],
+            ['细腻', 98],
+            ['补水', 95],
+            ['爽肤水', 92],
+            ['泡沫', 86],
+            ['不紧绷', 83],
+            ['控油', 75],
+            ['干净', 64],
+            ['油腻', 63],
+            ['氨基酸', 55],
+            ['水润', 54],
+            ['油皮', 49],
+            ['舒缓', 45],
+            ['不刺激', 42],
+            ['敏感肌', 42],
+            ['滋润', 40],
+            ['绵密', 40],
+            ['黑头', 40],
+            ['紧致', 38],
+            ['不油腻', 32]
+        ]
+        var list = [
+            ['温和',125],
+            ['清爽', 122],
+            ['保湿', 102],
+            ['补水', 67],
+            ['油皮', 40],
+            ['水润', 39],
+            ['不刺激', 38],
+            ['日常', 24],
+            ['夏天', 20],
+            ['滋润', 19],
+            ['熬夜', 15],
+            ['干燥', 13],
+            ['晚上', 11],
+            ['清洁', 9],
+            ['干净', 8],
+            ['毛孔', 6],
+            ['光滑', 6],
+            ['洁净', 5],
+            ['油脂', 4],
+            ['控油', 4],
+            ['紧绷', 4],
+            ['出油', 4],
+            ['油腻', 3],
+            ['皮脂', 2],
+            ['舒服', 1]
+        ]
+        // var num = 25
+        
+        // var words = [
+        //     '吸收',
+        //     '保湿',
+        //     '玻色因',
+        //     '维稳',
+        //     '修护'
+        // ]
+        // list.forEach(el  => {
+        //     el.push(false)
+        // })
+        // for (let i = 0; i < num; i++) {
+        //     var w = words[i] || "foo" + (i + 1)
+        //     list.push([w, idx - i, false])
+        // }
+        var wordCloud = new B2wordcloud(document.getElementById("chart"), {
+            // renderer: 'div',
+            list: words,
+            tooltip: {
+                formatter: function(item) {
+                    return '<div>' + item[0] + '</div>' + '<div>' + item[1] + '</div>'
+                }
+            },
+            fontWeight: '500',
+            fontFamily: '微软雅黑',
+            gridSize: 0,
+            shape: 'circle',
+            autoFontSize: true,
+            maxFontSize: 100,
+            minFontSize: 20,
+            rotateRatio: 0,
+            shuffle: false,
+            gridSize: 0,
+            shadowOffsetX: 0,
+            shadowOffsetY: 0,
+            shadowBlur: 0,
+            shadowColor: 0,
+            fontWeight: 500,
+            enableOptimize: true,
+            optimizedWordNum: 3,
+            // effect: 'linerMap',
+            drawOutOfBound: false,
+            maskImage: '../src/circle.svg',
+            hover: function(item) {
+                // console.log(item)
+            },
+            color: function(){ return '#00bcbe' },
+            click: function(a, b, c, index) {
+                wordCloud.dispatchAction({
+                    type: mark === index ? 'downplay' : 'highlight',
+                    dataIndex: index,
+                    keepAlive: true
+                })
+                if (mark != index) { 
+                    mark = index
+                } else {
+                    mark = -1
+                }
+            }
+        })
+        
+        
+        window.addEventListener('resize', function() {
+            wordCloud.resize()
+        })
+    </script>
+</body>
+</html>

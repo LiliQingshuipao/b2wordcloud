@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>适配正方形</title>
+    <style>
+        html, body, .test{
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+        #chart, #chart2 {
+            width: 380px;
+            height: 380px;
+            margin: 0 auto
+        }
+    </style>
+</head>
+<body>
+    <div class="test">
+        <h1>吸收</h1>
+        <div id="chart"></div>
+    </div>
+    <script src="dist/b2wordcloud.js"></script>
+    <script>
+        var mark = 0;
+        var idx = 1032
+        // var list = []
+        var list2 = [
+            ['测试', 104],
+            ['日常', 85],
+            ['粉质', 83],
+            ['温柔', 81],
+            ['配色', 80],
+            ['百搭', 54],
+            ['自然', 51],
+            ['细腻', 48],
+            ['珠光', 46],
+            ['哑光', 45],
+            ['气质', 35],
+            ['显色', 33],
+            ['大地色', 32],
+            ['粉嫩', 31],
+            ['亮片', 30],
+            ['消肿', 27],
+            ['少女', 21],
+            ['粉色', 20],
+            ['通勤', 19],
+            ['质地', 19],
+            ['肿眼泡', 16],
+            ['深邃', 15],
+            ['粉棕', 15],
+            ['黄皮', 15],
+            ['不飞粉', 12],
+        ]
+        var list1 = [
+            ['清爽', 164],
+            ['保湿', 160],
+            ['洗面奶', 155],
+            ['清洁', 142],
+            ['温和', 136],
+            ['乳液', 124],
+            ['细腻', 98],
+            ['补水', 95],
+            ['爽肤水', 92],
+            ['泡沫', 86],
+            ['不紧绷', 83],
+            ['控油', 75],
+            ['干净', 64],
+            ['油腻', 63],
+            ['氨基酸', 55],
+            ['水润', 54],
+            ['油皮', 49],
+            ['舒缓', 45],
+            ['不刺激', 42],
+            ['敏感肌', 42],
+            ['滋润', 40],
+            ['绵密', 40],
+            ['黑头', 40],
+            ['紧致', 38],
+            ['不油腻', 32]
+        ]
+        var list = [
+            ['温和',125],
+            ['清爽', 122],
+            ['保湿', 102],
+            ['补水', 67],
+            ['油皮', 40],
+            ['水润', 39],
+            ['不刺激', 38],
+            ['日常', 24],
+            ['夏天', 20],
+            ['滋润', 19],
+            ['熬夜', 15],
+            ['干燥', 13],
+            ['晚上', 11],
+            ['清洁', 9],
+            ['干净', 8],
+            ['毛孔', 6],
+            ['光滑', 6],
+            ['洁净', 5],
+            ['油脂', 4],
+            ['控油', 4],
+            ['紧绷', 4],
+            ['出油', 4],
+            ['油腻', 3],
+            ['皮脂', 2],
+            ['舒服', 1]
+        ]
+        // var num = 25
+        
+        // var words = [
+        //     '吸收',
+        //     '保湿',
+        //     '玻色因',
+        //     '维稳',
+        //     '修护'
+        // ]
+        // list.forEach(el  => {
+        //     el.push(false)
+        // })
+        // for (let i = 0; i < num; i++) {
+        //     var w = words[i] || "foo" + (i + 1)
+        //     list.push([w, idx - i, false])
+        // }
+        var wordCloud = new B2wordcloud(document.getElementById("chart"), {
+            // renderer: 'div',
+            list: list2,
+            tooltip: {
+                formatter: function(item) {
+                    return '<div>' + item[0] + '</div>' + '<div>' + item[1] + '</div>'
+                }
+            },
+            fontWeight: '500',
+            fontFamily: '微软雅黑',
+            gridSize: 6,
+            enableSquareAdaptor: true,
+            shape: 'square',
+            hover: function(item) {
+                // console.log(item)
+            },
+            color: function(){ return '#00bcbe' },
+            click: function(a, b, c, index) {
+                wordCloud.dispatchAction({
+                    type: mark === index ? 'downplay' : 'highlight',
+                    dataIndex: index,
+                    keepAlive: true
+                })
+                if (mark != index) { 
+                    mark = index
+                } else {
+                    mark = -1
+                }
+            }
+        })
+        
+        
+        window.addEventListener('resize', function() {
+            wordCloud.resize()
+        })
+    </script>
+</body>
+</html>
