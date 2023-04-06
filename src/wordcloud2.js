@@ -925,8 +925,22 @@ if (!window.clearImmediate) {
             color = gradient
           }
           
-          
-          ctx.fillStyle = color;
+          var getFadingColor = function (color) {
+            // 根据词频，弱化颜色
+           
+            if (options.enableColorFading && !isItemColorArray) {
+              var step = 5 // 将数据分成5份
+              var size = options.list.length / step // 计算每一份的数量
+              var groupIndex = Math.floor(index / size) + 1 // 计算当前词所在的组
+              var _opacity = Math.min(groupIndex * options.colorFadingLevel, 1)
+              var alpha = options.enableOptimize && index < options.optimizedWordNum ? 1 : (1 - _opacity)
+              return  colorRgba(color, alpha)
+            } else {
+              return color
+            }
+          }
+          ctx.fillStyle =  getFadingColor(color);
+
           
           // Translate the canvas position to the origin coordinate of where
           // the text should be put.
@@ -1545,7 +1559,7 @@ if (!window.clearImmediate) {
         imageData = bctx = bgPixel = undefined;
       }
       // set unavailable points when the size is not square
-      if (options.enableSquareAdaptor && _ngOffset !== 0) {
+      if (options.enableSquareAdaptor&& _ngOffset !== 0) {
         for (var i = 0; i < ngx; i++) {
           for (var j = 0; j < ngy; j++) {
             if (ngx > ngy) {
@@ -1556,6 +1570,17 @@ if (!window.clearImmediate) {
               if (j < _ngOffset || j > _ngOffset + ngx - 1) {
                 grid[i][j] = false
               }
+            }
+          }
+        }
+      }
+      // set unavailable points when the size is not square for basic circle
+      if (options.shape === 'circle') {
+        var radius = Math.min(ngx, ngy) / 2
+        for (var i = 0; i < ngx; i++) {
+          for (var j = 0; j < ngy; j++) {
+            if ((i - ngx / 2) * (i - ngx / 2) + (j - ngy / 2) * (j - ngy / 2) > radius * radius) {
+              grid[i][j] = false
             }
           }
         }
@@ -1642,23 +1667,28 @@ if (!window.clearImmediate) {
         if (!drawn) {
           drawn = putWord(settings.list[i], i);
         }
+        var enableAutoSizeFix = settings.enableSquareAdaptor || settings.shape === 'circle'
         // 至少保证渲染35个词
         // 当 maxFixLen 无法保证可以放下时，减小字体大小
-        var maxFixLen = Math.min(settings.list.length, 35)
-        var minFontSizeScale = 0.3
-        if (settings.enableSquareAdaptor && (i === maxFixLen - 1)) {
+        var minWord = settings.shape === 'circle' ? settings.list.length : 35
+        var maxFixLen =  Math.min(settings.list.length, minWord)
+        var minFontSizeScale = 0.1
+        if (enableAutoSizeFix && (i === maxFixLen - 1)) {
           for (let topN = 0; topN < maxFixLen; topN++) {
             setTimeout(() => {
               _this.drawItem(_this.words[topN], true)
             }, 0);
           }
-        } else if (!settings.enableSquareAdaptor || i >= maxFixLen || totalFontSizeScale < minFontSizeScale) {
+        } else if (!enableAutoSizeFix || i >= maxFixLen || totalFontSizeScale < minFontSizeScale) {
           _this.drawItem(drawn, true)
         }
-        if (settings.enableSquareAdaptor && (i < maxFixLen && !drawn && totalFontSizeScale >= minFontSizeScale)) {
-          totalFontSizeScale = totalFontSizeScale - 0.05 // 整体减小字体大小
-          _this.words = []
-          grid = JSON.parse(JSON.stringify(cacheGrid))
+        if (enableAutoSizeFix && (i < maxFixLen && !drawn && totalFontSizeScale >= minFontSizeScale)) {
+          _this.words = [];
+          grid = JSON.parse(JSON.stringify(cacheGrid));
+          if (options.shape === 'color') {
+            options.maxFontSize = (ngx * g);
+          }
+          totalFontSizeScale = totalFontSizeScale - 0.05; // 整体减小字体大小
           i = 0
         } else {
           i++;
