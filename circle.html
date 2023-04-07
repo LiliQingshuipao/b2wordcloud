@@ -548,7 +548,6 @@
 大足县	1
 巫溪县	1`
         var words = wordsStr.split('\n').map(r => r.split('\t')).slice(0, 100)
-        console.log(words.length)
         var mark = 0;
         var idx = 1032
         // var list = []
@@ -661,9 +660,9 @@
             fontFamily: '微软雅黑',
             gridSize: 0,
             shape: 'circle',
-            autoFontSize: true,
-            maxFontSize: 100,
-            minFontSize: 20,
+            autoFontSize: false,
+            maxFontSize: 120,
+            minFontSize: 10,
             rotateRatio: 0,
             shuffle: false,
             gridSize: 0,
@@ -673,8 +672,8 @@
             shadowColor: 0,
             fontWeight: 500,
             enableOptimize: true,
-            optimizedWordNum: 2,
-            // effect: 'linerMap',
+            optimizedWordNum: 1,
+            effect: 'equal',
             drawOutOfBound: false,
             maskImage: '../src/circle.svg',
             enableColorFading: true,

@@ -366,6 +366,7 @@ if (!window.clearImmediate) {
       maxRadius;
     var fontSizeScale;
     var totalFontSizeScale;
+    var originalFontSize;
     /* timestamp for measuring each putWord() action */
     var escapeTime;
 
@@ -1233,10 +1234,26 @@ if (!window.clearImmediate) {
           // Return true so some() will stop and also return true.
           return wordItem;
         };
-        while (r--) {
-          var isReverse = options.enableOptimize && index >= options.optimizedWordNum && options.effect !== 'linerMap'
-          var _r = isReverse ? maxRadius - r : r // 为了保证形状，从最外围开始渲染，可能存在的问题：词较少时，最外围也可能不能铺满
-          var points = getPointsAtRadius(maxRadius - _r);
+        var arr = new Array(r).fill(undefined).map((_, index) => index) // 获取半径列表
+        function shuffle(arr){
+          for(var i=arr.length-1; i>=0; i--){
+            var j = Math.floor(Math.random() * (i+1));
+            var temp = arr[i];
+            arr[i] = arr[j];
+            arr[j] = temp;
+          }
+        }
+        var isReverse = options.shape === 'circle' && options.enableOptimize && index >= options.optimizedWordNum
+
+        if (isReverse) {
+          arr = arr.reverse()
+          shuffle(arr) // 打乱数组
+        } 
+        
+        
+        for (var idx = 0; idx < arr.length; idx++) {
+          // 为了保证形状，随机半径
+          var points = getPointsAtRadius(arr[idx]);
           if (settings.shuffle) {
             points = [].concat(points);
             shuffleArray(points);
@@ -1268,7 +1285,7 @@ if (!window.clearImmediate) {
       var wordItem = tryToPutWord()
       if (wordItem) {
         return wordItem
-      } else if (options.autoFontSize) {
+      } else if (options.autoFontSize  || options.shape === 'square' || options.shape === 'circle') {
         if (lastFontSize <= options.minFontSize) {
           return false
         } else {
@@ -1460,6 +1477,7 @@ if (!window.clearImmediate) {
       var boxSizeScale = 400 / g
       fontSizeScale = options.enableSquareAdaptor ? Math.min((Math.min(ngx, ngy) / boxSizeScale), 1) : 1// 以 400 宽度为基准，按比例缩放 weiget 返回的大小
       totalFontSizeScale = 1
+      originalFontSize = options.maxFontSize ? options.maxFontSize : undefined
       // Sending a wordcloudstart event which cause the previous loop to stop.
       // Do nothing if the event is canceled.
       if (!sendEvent('wordcloudstart', true)) {
@@ -1672,7 +1690,7 @@ if (!window.clearImmediate) {
         // 当 maxFixLen 无法保证可以放下时，减小字体大小
         var minWord = settings.shape === 'circle' ? settings.list.length : 35
         var maxFixLen =  Math.min(settings.list.length, minWord)
-        var minFontSizeScale = 0.1
+        var minFontSizeScale = settings.shape === 'square' ? 0.3 : 0.1
         if (enableAutoSizeFix && (i === maxFixLen - 1)) {
           for (let topN = 0; topN < maxFixLen; topN++) {
             setTimeout(() => {
@@ -1685,8 +1703,8 @@ if (!window.clearImmediate) {
         if (enableAutoSizeFix && (i < maxFixLen && !drawn && totalFontSizeScale >= minFontSizeScale)) {
           _this.words = [];
           grid = JSON.parse(JSON.stringify(cacheGrid));
-          if (options.shape === 'color') {
-            options.maxFontSize = (ngx * g);
+          if (options.shape === 'circle') {
+            options.maxFontSize = originalFontSize || (ngx * g);
           }
           totalFontSizeScale = totalFontSizeScale - 0.05; // 整体减小字体大小
           i = 0

@@ -298,12 +298,14 @@ export class B2wordcloud {
                     }
                     return (size - min) / subDomain * subRange + option.minFontSize;
                 } else {
-                    var maxFontSize = index === optimizedWordNum ? option.maxFontSize / 4 : option.maxFontSize
+                    var maxFontSize = option.maxFontSize
                     // var lastOptimizedWord = option.list[optimizedWordNum - 1]
+                    var _min = 0
+                    var _max = option.list.length
                     var r = typeof option.fontSizeFactor === 'number' ? option.fontSizeFactor : 1 / 10
-                    var a = (maxFontSize - option.minFontSize) / (Math.pow(max, r) - Math.pow(min, r))
-                    var b = maxFontSize - a * Math.pow(max, r)
-                    return Math.ceil(a * Math.pow(size, r) + b)
+                    var a = (maxFontSize - option.minFontSize) / (Math.pow(_max, r) - Math.pow(_min, r))
+                    var b = maxFontSize - a * Math.pow(_max, r)
+                    return Math.ceil(a * Math.pow(_max - index, r) + b)
                 }
             }
             //用y=ax^r+b公式确定字体大小
