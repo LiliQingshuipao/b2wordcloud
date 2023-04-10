@@ -2073,9 +2073,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	            drawn = putWord(settings.list[i], i);
 	          }
 	          var enableAutoSizeFix = settings.enableSquareAdaptor || settings.shape === 'circle';
-	          // 至少保证渲染35个词
+	          // 至少保证渲染35个词（circle 限制 200）
 	          // 当 maxFixLen 无法保证可以放下时，减小字体大小
-	          var minWord = settings.shape === 'circle' ? settings.list.length : 35;
+	          var minWord = settings.shape === 'circle' ? 200 : 35;
 	          var maxFixLen = Math.min(settings.list.length, minWord);
 	          var minFontSizeScale = settings.shape === 'square' ? 0.3 : 0.1;
 	          if (enableAutoSizeFix && i === maxFixLen - 1) {
