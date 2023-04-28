@@ -1176,12 +1176,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	        // Go through the occupied points,
 	        // return false if the space is not available.
 	        var i = occupied.length;
-	        // fix word splited when enableSquareAdaptor is true
+	        // fix word splitted when enableSquareAdaptor is true
 	        var boundaryGap = options.enableSquareAdaptor ? 1 : 0;
 	        while (i--) {
 	          var px = gx + occupied[i][0];
 	          var py = gy + occupied[i][1];
-	          if (px >= ngx - boundaryGap || py >= ngy || px < 0 || py < 0) {
+	          if (px >= ngx - boundaryGap || py >= ngy - boundaryGap || px < 0 || py < 0) {
 	            if (!settings.drawOutOfBound) {
 	              return false;
 	            }

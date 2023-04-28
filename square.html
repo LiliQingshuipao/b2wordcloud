@@ -12,8 +12,8 @@
             position: relative;
         }
         #chart, #chart2 {
-            width: 380px;
-            height: 380px;
+            width: 450px;
+            height: 450px;
             margin: 0 auto
         }
     </style>
@@ -109,6 +109,33 @@
             ['皮脂', 2],
             ['舒服', 1]
         ]
+        var list3 = [
+            ['湿敷',1176],
+            ['痘痘',1009],
+            ['闭口',866],
+            ['油皮',791],
+            ['保湿',779],
+            ['痘肌',763],
+            ['舒缓',541],
+            ['吸收',513],
+            ['灵芝',489],
+            ['长痘',477],
+            ['补水',475],
+            ['维稳',470],
+            ['毛孔',450],
+            ['祛痘',439],
+            ['泛红',438],
+            ['清爽',424],
+            ['混油',359],
+            ['安心',354],
+            ['修复',335],
+            ['粉刺',311],
+            ['成分',310],
+            ['清洁',310],
+            ['控油',306],
+            ['过敏',302],
+            ['熬夜',284]
+            ]
         // var num = 25
         
         // var words = [
@@ -127,7 +154,7 @@
         // }
         var wordCloud = new B2wordcloud(document.getElementById("chart"), {
             // renderer: 'div',
-            list: list2,
+            list: list3,
             tooltip: {
                 formatter: function(item) {
                     return '<div>' + item[0] + '</div>' + '<div>' + item[1] + '</div>'
@@ -136,6 +163,15 @@
             fontWeight: '500',
             fontFamily: '微软雅黑',
             gridSize: 6,
+            effect: 'test',
+            shuffle: false,
+            maxFontSize: 200,
+            enableOptimize: true,
+            optimizedWordNum: 5,
+            minFontSize: 20,
+            rotateRatio: 0,
+            drawOutOfBound: false,
+
             enableSquareAdaptor: true,
             shape: 'square',
             hover: function(item) {
