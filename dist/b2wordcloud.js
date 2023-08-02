@@ -161,7 +161,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	        key: '_setDefaultFontSize',
 	        value: function _setDefaultFontSize(options) {
 	            if (options.autoFontSize) {
-	                options.maxFontSize = this._wrapper.clientWidth;
+	                if (options.enableSquareAdaptor) {
+	                    options.maxFontSize = this._wrapper.clientWidth;
+	                } else {
+	                    options.maxFontSize = this._options.clientWidth ? Math.min(this._options.clientWidth, 400) : 400;
+	                }
 	                options.minFontSize = typeof options.minFontSize === 'number' ? options.minFontSize : 10;
 	            } else {
 	                options.maxFontSize = typeof options.maxFontSize === 'number' ? options.maxFontSize : 36;
@@ -239,11 +243,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	                    offsetX = void 0;
 	                var tempHover = this._options.hover;
 	                var tempOut = this._options.mouseout;
-	                this._options.mouseout = function () {
-	                    if (tempOut) tempOut();
+	                this._options.mouseout = function (evt) {
+	                    if (tempOut) tempOut(evt);
 	                    // hover item为空时才隐藏tooltip
 	                    if (!_this._cacheHoverParams.item) {
 	                        _this._tooltip.style.display = 'none';
+	                    }
+	                    var el = evt.toElement;
+	                    if (el && el === _this._tooltip) {
+	                        el.addEventListener('mouseleave', function mouseleave() {
+	                            el.style.display = 'none';
+	                            el.removeEventListener('mouseleave', mouseleave);
+	                        });
 	                    }
 	                };
 	
@@ -338,72 +349,61 @@ return /******/ (function(modules) { // webpackBootstrap
 	        key: '_fixWeightFactor',
 	        value: function _fixWeightFactor(option) {
 	            if (option.list && option.list.length > 0) {
-	                var _defaultNormalWordFactor = function _defaultNormalWordFactor(size) {
-	                    if (option.effect === 'linerMap') {
-	                        var subDomain = max - min;
-	                        var subRange = option.maxFontSize - option.minFontSize;
-	                        if (subDomain === 0) {
-	                            return subRange === 0 ? option.minFontSize : (option.minFontSize + option.maxFontSize) / 2;
-	                        }
-	                        if (size === min) {
-	                            return option.minFontSize;
-	                        }
-	
-	                        if (size === max) {
-	                            return option.maxFontSize;
-	                        }
-	                        return (size - min) / subDomain * subRange + option.minFontSize;
-	                    } else {
-	                        var r = typeof option.fontSizeFactor === 'number' ? option.fontSizeFactor : 1 / 10;
-	                        var a = (option.maxFontSize - option.minFontSize) / (Math.pow(max, r) - Math.pow(min, r));
-	                        var b = option.maxFontSize - a * Math.pow(max, r);
-	                        return Math.ceil(a * Math.pow(size, r) + b);
-	                    }
-	                };
-	
-	                var _defaultOptimizeWordFactor = function _defaultOptimizeWordFactor(size, index) {
-	
-	                    var optimizedWordNum = option.optimizedWordNum;
-	                    function sigmoid(k, index) {
-	                        return 1 / (1 + Math.exp(k * index));
-	                    }
-	                    if (option.effect === 'linerMap') {
-	                        var subDomain = max - min;
-	                        var subRange = (option.maxFontSize - option.minFontSize) * (index >= optimizedWordNum ? sigmoid(0.1, index) : 1);
-	                        if (subDomain === 0) {
-	                            return subRange === 0 ? option.minFontSize : (option.minFontSize + option.maxFontSize) / 2;
-	                        }
-	                        if (size === min) {
-	                            return option.minFontSize;
-	                        }
-	
-	                        if (size === max) {
-	                            return option.maxFontSize;
-	                        }
-	                        return (size - min) / subDomain * subRange + option.minFontSize;
-	                    } else {
-	                        var maxFontSize = option.maxFontSize;
-	                        // var lastOptimizedWord = option.list[optimizedWordNum - 1]
-	                        var _min = 0;
-	                        var _max = option.list.length;
-	                        var r = typeof option.fontSizeFactor === 'number' ? option.fontSizeFactor : 1 / 10;
-	                        var a = (maxFontSize - option.minFontSize) / (Math.pow(_max, r) - Math.pow(_min, r));
-	                        var b = maxFontSize - a * Math.pow(_max, r);
-	                        return Math.ceil(a * Math.pow(_max - index, r) + b);
-	                    }
-	                };
-	                //用y=ax^r+b公式确定字体大小
-	
-	
 	                var min = option.list[option.list.length - 1][1];
+	                var max = option.list[0][1];
 	                var max = option.enableSquareAdaptor && option.list[1] && option.list[1][1] ? option.list[1][1] : option.list[0][1];
 	                if (max > min) {
-	                    option.weightFactor = !option.enableOptimize ? _defaultNormalWordFactor : _defaultOptimizeWordFactor;
+	                    option.weightFactor = function (size) {
+	                        if (option.effect === 'linerMap') {
+	                            var subDomain = max - min;
+	                            var subRange = (option.maxFontSize - option.minFontSize) / (option.topN || 5);
+	                            if (subDomain === 0) {
+	                                return subRange === 0 ? option.minFontSize : (option.minFontSize + option.maxFontSize) / 2;
+	                            }
+	                            if (size === min) {
+	                                return option.minFontSize;
+	                            }
+	
+	                            if (size === max) {
+	                                return subRange + option.minFontSize;
+	                            }
+	                            return (size - min) / subDomain * subRange + option.minFontSize;
+	                        } else {
+	                            //用y=ax^r+b公式确定字体大小
+	                            var r = typeof option.fontSizeFactor === 'number' ? option.fontSizeFactor : 1 / (option.topN || 5);
+	                            var a = (option.maxFontSize - option.minFontSize) / (Math.pow(max, r) - Math.pow(min, r));
+	                            var b = option.maxFontSize - a * Math.pow(max, r);
+	                            return Math.ceil(a * Math.pow(size, r) + b);
+	                        }
+	                    };
 	                } else {
 	                    option.weightFactor = function (size) {
 	                        return option.maxFontSize;
 	                    };
 	                }
+	
+	                //使用linerMap计算词云大小
+	                // if (max > min) {
+	                //     option.weightFactor = function(val) {
+	                //         var subDomain = max - min
+	                //         var subRange = option.maxFontSize - option.minFontSize
+	                //         if (subDomain === 0) {
+	                //             return subRange === 0 ? option.minFontSize : (option.minFontSize + option.maxFontSize) / 2;
+	                //         }
+	                //         if (val === min) {
+	                //             return option.minFontSize;
+	                //         }
+	
+	                //         if (val === max) {
+	                //             return option.maxFontSize;
+	                //         }
+	                //         return (val - min) / subDomain * subRange + option.minFontSize;
+	                //     }
+	                // } else {
+	                //     option.weightFactor = function(size) {
+	                //         return option.maxFontSize
+	                //     }
+	                // }
 	            }
 	        }
 	        // resize() {
@@ -670,6 +670,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	        cursorWhenHover: 'pointer',
 	        mouseout: null,
 	
+	        topN: 5,
+	        autoFontSize: false,
+	        autoRatio: 0.8,
+	
 	        enableSquareAdaptor: false // use speicial square wordcloud
 	      };
 	      var _this = this;
@@ -790,10 +794,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	      ngx, ngy, // width and height of the grid
 	      center, // position of the center of the cloud
 	      corners, // positions of the corders of the square, priority processing before other positions. (except center
+	      initMaxFontSize, // save the font size of the biggest text before draw
 	      maxRadius;
-	      var fontSizeScale;
-	      var totalFontSizeScale;
-	      var originalFontSize;
+	
 	      /* timestamp for measuring each putWord() action */
 	      var escapeTime;
 	
@@ -860,8 +863,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	        return infoGrid[x][y];
 	      };
-	      var wordcloudout = function wordcloudout() {
-	        settings.mouseout();
+	      var wordcloudout = function wordcloudout(evt) {
+	        settings.mouseout(evt);
 	      };
 	      var wordcloudhover = function wordcloudhover(evt) {
 	        var info = getInfoGridFromMouseTouchEvent(evt);
@@ -948,13 +951,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	        }
 	      };
 	
-	      var getTextInfo = function getTextInfo(word, weight, rotateDeg, coef, useBoundary, lastFontSize, index) {
+	      var getTextInfo = function getTextInfo(word, weight, rotateDeg, useBoundary, lastFontSize) {
 	        // calculate the acutal font size
 	        // fontSize === 0 means weightFactor function wants the text skipped,
 	        // and size < minSize means we cannot draw the text.
-	        // coef  the coefficient to recalculate the lastFontSize
 	        var debug = false;
-	        var fontSize = lastFontSize ? lastFontSize - lastFontSize * coef : settings.weightFactor(weight, index) * fontSizeScale * totalFontSizeScale;
+	
+	        var fontSize = lastFontSize ? lastFontSize * settings.autoRatio : settings.weightFactor(weight);
+	
 	        if (fontSize <= settings.minSize) {
 	          return false;
 	        }
@@ -992,9 +996,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	        // Create a boundary box that is larger than our estimates,
 	        // so text don't get cut of (it sill might)
-	        // add useBoundary param for special square shape
 	        var boxWidth = useBoundary ? fw + fh * 2 : fw;
 	        var boxHeight = useBoundary ? fh * 3 : fh;
+	        // var boxWidth = fw + fh * 2;
+	        // var boxHeight = fh * 3;
 	        var fgw = Math.ceil(boxWidth / g);
 	        var fgh = Math.ceil(boxHeight / g);
 	        boxWidth = fgw * g;
@@ -1111,7 +1116,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	        }
 	
 	        // Return information needed to create the text on the real canvas
-	        // console.log(word, fontSize)
 	        return {
 	          mu: mu,
 	          occupied: occupied,
@@ -1125,49 +1129,24 @@ return /******/ (function(modules) { // webpackBootstrap
 	          fontSize: fontSize
 	        };
 	      };
-	      // returen the word draw start position offset for the special points
+	      // return the word draw start position offset for the special points
 	      var getSpecialPointOffset = function getSpecialPointOffset(info, index) {
 	        switch (index) {
 	          case 1:
-	            {
-	              // left top
-	              return {
-	                x: 0,
-	                y: 0
-	              };
-	            };
+	            // left top
+	            return { x: 0, y: 0 };
 	          case 2:
-	            {
-	              // left bottom
-	              return {
-	                x: 0,
-	                y: info.gh
-	              };
-	            };
+	            // left bottom
+	            return { x: 0, y: info.gh };
 	          case 3:
-	            {
-	              // right top
-	              return {
-	                x: info.gw,
-	                y: 0
-	              };
-	            };
+	            // right top
+	            return { x: info.gw, y: 0 };
 	          case 4:
-	            {
-	              // right bottom
-	              return {
-	                x: info.gw,
-	                y: info.gh
-	              };
-	            };
+	            // right bottom
+	            return { x: info.gw, y: info.gh };
 	          default:
-	            {
-	              // center
-	              return {
-	                x: info.gw / 2,
-	                y: info.gh / 2
-	              };
-	            };
+	            // center
+	            return { x: info.gw / 2, y: info.gh / 2 };
 	        }
 	      };
 	
@@ -1176,7 +1155,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	        // Go through the occupied points,
 	        // return false if the space is not available.
 	        var i = occupied.length;
-	        // fix word splitted when enableSquareAdaptor is true
 	        var boundaryGap = options.enableSquareAdaptor ? 1 : 0;
 	        while (i--) {
 	          var px = gx + occupied[i][0];
@@ -1568,7 +1546,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        var tryToPutWord = function tryToPutWord(defaultFontSize) {
 	          var rotateDeg = getRotateDeg();
 	          // get info needed to put the text onto the canvas
-	          var info = getTextInfo(word, weight, rotateDeg, 0.2, true, defaultFontSize, index);
+	          var info = getTextInfo(word, weight, rotateDeg, true, defaultFontSize);
 	
 	          lastFontSize = info.fontSize;
 	          // not getting the info means we shouldn't be drawing this one.
@@ -1626,27 +1604,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	            // Return true so some() will stop and also return true.
 	            return wordItem;
 	          };
-	          var arr = new Array(r).fill(undefined).map(function (_, index) {
-	            return index;
-	          }); // 获取半径列表
-	          function shuffle(arr) {
-	            for (var i = arr.length - 1; i >= 0; i--) {
-	              var j = Math.floor(Math.random() * (i + 1));
-	              var temp = arr[i];
-	              arr[i] = arr[j];
-	              arr[j] = temp;
-	            }
-	          }
-	          var isReverse = options.shape === 'circle' && options.enableOptimize && index >= options.optimizedWordNum;
-	
-	          if (isReverse) {
-	            arr = arr.reverse();
-	            shuffle(arr); // 打乱数组
-	          }
-	
-	          for (var idx = 0; idx < arr.length; idx++) {
-	            // 为了保证形状，随机半径
-	            var points = getPointsAtRadius(arr[idx]);
+	          while (r--) {
+	            var points = getPointsAtRadius(maxRadius - r);
 	            if (settings.shuffle) {
 	              points = [].concat(points);
 	              shuffleArray(points);
@@ -1678,7 +1637,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        var wordItem = tryToPutWord();
 	        if (wordItem) {
 	          return wordItem;
-	        } else if (options.autoFontSize || options.shape === 'square' || options.shape === 'circle') {
+	        } else if (options.autoFontSize && index >= settings.topN) {
 	          if (lastFontSize <= options.minFontSize) {
 	            return false;
 	          } else {
@@ -1719,7 +1678,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	        }
 	        var tryToPutSpecialWord = function tryToPutSpecialWord(point, defaultFontSize) {
 	          // get info needed to put the text onto the canvas
-	          var info = getTextInfo(word, weight, 0, 0.05, !point, defaultFontSize, index);
+	          var rotateDeg = getRotateDeg();
+	          var info = getTextInfo(word, weight, rotateDeg, false, defaultFontSize);
 	
 	          lastFontSize = info.fontSize;
 	          // not getting the info means we shouldn't be drawing this one.
@@ -1743,20 +1703,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	          var r = maxRadius + 1;
 	          var tryToPutWordAtEdgePoint = function tryToPutWordAtEdgePoint(gxy, index) {
 	            var pointOffset = getSpecialPointOffset(info, index);
-	            var gx = Math.floor(gxy[0] - pointOffset.x) < 0 ? Math.floor(gxy[0]) : Math.floor(gxy[0] - pointOffset.x);
-	            var gy = Math.floor(gxy[1] - pointOffset.y) < 0 ? Math.floor(gxy[1]) : Math.floor(gxy[1] - pointOffset.y);
+	            var gx = Math.floor(gxy[0] - pointOffset.x);
+	            var gy = Math.floor(gxy[1] - pointOffset.y);
 	            var gw = info.gw;
 	            var gh = info.gh;
 	            // restrict the with of the corners
 	            var restrictSpecialWordSize = function restrictSpecialWordSize(gw, index) {
 	              switch (index) {
-	                case 1:
-	                case 2:
-	                case 3:
-	                case 4:
-	                  return gw / Math.min(ngx, ngy) > 0.8 ? false : true;
-	                default:
+	                case 0:
 	                  return true;
+	                default:
+	                  return gw / Math.min(ngx, ngy) > 0.78 ? false : true;
+	
 	              }
 	            };
 	            // If we cannot fit the text at this position, return false
@@ -1781,35 +1739,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	            _this.words.push(wordItem);
 	            return wordItem;
 	          };
-	          while (r--) {
-	            var _points;
-	            if (!point) {
-	              var _points = getPointsAtRadius(maxRadius - r);
-	              if (settings.shuffle) {
-	                _points = [].concat(_points);
-	                shuffleArray(_points);
-	              }
-	            } else {
-	              _points = [point];
-	            }
-	            // Try to fit the words by looking at each point.
-	            // array.some() will stop and return true
-	            // when putWordAtPoint() returns true.
-	            // If all the points returns false, array.some() returns false.
-	            var drawn;
-	            for (var j = 0; j < _points.length; j++) {
-	              var drawnItem = tryToPutWordAtEdgePoint(_points[j], index);
-	              if (drawnItem) {
-	                drawn = drawnItem;
-	                break;
-	              }
-	            }
+	          var drawn = tryToPutWordAtEdgePoint(point, index);
 	
-	            // var drawn = points.some(tryToPutWordAtPoint);
-	            if (drawn) {
-	              // leave putWord() and return true
-	              return drawn;
-	            }
+	          // var drawn = points.some(tryToPutWordAtPoint);
+	          if (drawn) {
+	            // leave putWord() and return true
+	            return drawn;
 	          }
 	          // we tried all distances but text won't fit, return false
 	          return false;
@@ -1817,10 +1752,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        var point = points[index];
 	        // init fontSize for special positions.
 	        // set 3.6 is suitable for corner words
-	        var _ngx = Math.min(ngx, ngy);
-	        var cornerSize = _ngx * (i !== 0 ? g / 3.6 : g / 1.2);
-	        var _fontSize = i < 1 ? cornerSize : undefined;
-	        var wordItem = tryToPutSpecialWord(point, _fontSize);
+	        var wordItem = tryToPutSpecialWord(point);
 	        if (wordItem) {
 	          return wordItem;
 	        } else {
@@ -1830,7 +1762,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            while (!wordItem) {
 	              wordItem = tryToPutSpecialWord(point, lastFontSize);
 	              if (wordItem) {
-	                options.maxFontSize = i === 0 ? cornerSize / 3 : lastFontSize;
+	                options.maxFontSize = initMaxFontSize * settings.autoRatio;
 	                return wordItem;
 	              }
 	            }
@@ -1870,10 +1802,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	          ngx = Math.ceil(rect.width / g);
 	          ngy = Math.ceil(rect.height / g);
 	        }
-	        var boxSizeScale = 400 / g;
-	        fontSizeScale = options.enableSquareAdaptor ? Math.min(Math.min(ngx, ngy) / boxSizeScale, 1) : 1; // 以 400 宽度为基准，按比例缩放 weiget 返回的大小
-	        totalFontSizeScale = 1;
-	        originalFontSize = options.maxFontSize ? options.maxFontSize : undefined;
+	
 	        // Sending a wordcloudstart event which cause the previous loop to stop.
 	        // Do nothing if the event is canceled.
 	        if (!sendEvent('wordcloudstart', true)) {
@@ -1890,6 +1819,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        var rightTop = ngx > ngy ? [_ngOffset + ngy - 1, 0] : [ngx - 1, _ngOffset];
 	        var rightbottom = ngx > ngy ? [_ngOffset + ngy - 1, ngy - 1] : [ngx - 1, _ngOffset + ngx - 1];
 	        corners = [leftTop, leftBottom, rightTop, rightbottom];
+	        initMaxFontSize = options.maxFontSize;
 	        // Maxium radius to look for space
 	        maxRadius = Math.floor(Math.sqrt(ngx * ngx + ngy * ngy));
 	        /* Clear the canvas only if the clearCanvas is set,
@@ -1991,7 +1921,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	          }
 	        }
 	        cacheGrid = JSON.parse(JSON.stringify(grid));
-	        totalFontSizeScale = 1;
 	        // fill the infoGrid with empty state if we need it
 	        if (settings.hover || settings.click) {
 	          interactive = true;
@@ -2066,38 +1995,25 @@ return /******/ (function(modules) { // webpackBootstrap
 	          }
 	          escapeTime = new Date().getTime();
 	          var drawn;
-	          if (settings.enableSquareAdaptor) {
+	          if (settings.enableSquareAdaptor && i < 5) {
 	            drawn = putSpecialWord(settings.list[i], i);
-	          }
-	          if (!drawn) {
+	          } else if (!drawn) {
 	            drawn = putWord(settings.list[i], i);
 	          }
-	          var enableAutoSizeFix = settings.enableSquareAdaptor || options.shape === 'circle';
-	          // 至少保证渲染35个词（circle 限制 200）
-	          // 当 maxFixLen 无法保证可以放下时，减小字体大小
-	          var minWord = options.shape === 'circle' ? 200 : 35;
-	          var maxFixLen = Math.min(settings.list.length, minWord);
-	          var minFontSizeScale = options.shape === 'square' ? 0.3 : 0.1;
-	          if (enableAutoSizeFix && i === maxFixLen - 1) {
-	            var _loop = function _loop(topN) {
-	              setTimeout(function () {
-	                _this.drawItem(_this.words[topN], true);
-	              }, 0);
-	            };
 	
-	            for (var topN = 0; topN < maxFixLen; topN++) {
-	              _loop(topN);
+	          if (i === settings.topN) {
+	            for (var topN = 0; topN <= settings.topN; topN++) {
+	              _this.drawItem(_this.words[topN], true);
 	            }
-	          } else if (!enableAutoSizeFix || i >= maxFixLen || totalFontSizeScale < minFontSizeScale) {
+	          } else if (i > settings.topN) {
 	            _this.drawItem(drawn, true);
 	          }
-	          if (enableAutoSizeFix && i < maxFixLen && !drawn && totalFontSizeScale >= minFontSizeScale) {
+	
+	          if (i < settings.topN && !drawn) {
+	            options.maxFontSize = options.maxFontSize * settings.autoRatio;
+	            initMaxFontSize = options.maxFontSize;
 	            _this.words = [];
 	            grid = JSON.parse(JSON.stringify(cacheGrid));
-	            if (options.shape === 'circle') {
-	              options.maxFontSize = originalFontSize || ngx * g;
-	            }
-	            totalFontSizeScale = totalFontSizeScale - 0.05; // 整体减小字体大小
 	            i = 0;
 	          } else {
 	            i++;

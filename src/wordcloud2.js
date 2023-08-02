@@ -172,7 +172,7 @@ if (!window.clearImmediate) {
           context.msBackingStorePixelRatio ||
           context.oBackingStorePixelRatio ||
           context.backingStorePixelRatio || 1;
-      return ((window.devicePixelRatio || 1) / backingStore) * 2; // 处理截图模糊的问题
+          return ((window.devicePixelRatio || 1) / backingStore) * 2; // 处理截图模糊的问题
     };
     var canvasEl = null
     var ratio = 1
@@ -231,6 +231,10 @@ if (!window.clearImmediate) {
       click: null,
       cursorWhenHover: 'pointer',
       mouseout: null,
+
+      topN: 5,
+      autoFontSize: false,
+      autoRatio: 0.8,
 
       enableSquareAdaptor: false // use speicial square wordcloud
     };
@@ -363,10 +367,9 @@ if (!window.clearImmediate) {
       ngx, ngy, // width and height of the grid
       center, // position of the center of the cloud
       corners, // positions of the corders of the square, priority processing before other positions. (except center
+      initMaxFontSize, // save the font size of the biggest text before draw
       maxRadius;
-    var fontSizeScale;
-    var totalFontSizeScale;
-    var originalFontSize;
+
     /* timestamp for measuring each putWord() action */
     var escapeTime;
 
@@ -437,8 +440,8 @@ if (!window.clearImmediate) {
 
       return infoGrid[x][y];
     };
-    var wordcloudout = function() {
-      settings.mouseout()
+    var wordcloudout = function(evt) {
+      settings.mouseout(evt);
     }
     var wordcloudhover = function wordcloudhover(evt) {
       var info = getInfoGridFromMouseTouchEvent(evt);
@@ -533,13 +536,15 @@ if (!window.clearImmediate) {
       }
     };
 
-    var getTextInfo = function getTextInfo(word, weight, rotateDeg, coef, useBoundary, lastFontSize, index) {
+    var getTextInfo = function getTextInfo(word, weight, rotateDeg, useBoundary, lastFontSize) {
       // calculate the acutal font size
       // fontSize === 0 means weightFactor function wants the text skipped,
       // and size < minSize means we cannot draw the text.
-      // coef  the coefficient to recalculate the lastFontSize
       var debug = false;
-      var fontSize = lastFontSize ? lastFontSize - lastFontSize * coef : settings.weightFactor(weight, index) * fontSizeScale * totalFontSizeScale;
+      
+      var fontSize = lastFontSize ? lastFontSize * settings.autoRatio : settings.weightFactor(weight);
+
+
       if (fontSize <= settings.minSize) {
         return false;
       }
@@ -580,9 +585,10 @@ if (!window.clearImmediate) {
 
       // Create a boundary box that is larger than our estimates,
       // so text don't get cut of (it sill might)
-      // add useBoundary param for special square shape
       var boxWidth = useBoundary ? fw + fh * 2 : fw;
       var boxHeight = useBoundary ? fh * 3 : fh;
+      // var boxWidth = fw + fh * 2;
+      // var boxHeight = fh * 3;
       var fgw = Math.ceil(boxWidth / g);
       var fgh = Math.ceil(boxHeight / g);
       boxWidth = fgw * g;
@@ -705,7 +711,6 @@ if (!window.clearImmediate) {
       }
 
       // Return information needed to create the text on the real canvas
-      // console.log(word, fontSize)
       return {
         mu: mu,
         occupied: occupied,
@@ -719,39 +724,19 @@ if (!window.clearImmediate) {
         fontSize: fontSize
       };
     };
-    // returen the word draw start position offset for the special points
+    // return the word draw start position offset for the special points
     var getSpecialPointOffset = function getSpecialPointOffset(info, index) {
       switch (index) {
-        case 1: { // left top
-          return {
-            x: 0,
-            y: 0
-          }
-        };
-        case 2: { // left bottom
-          return {
-            x: 0,
-            y:info.gh
-          }
-        };
-        case 3: { // right top
-          return {
-            x: info.gw,
-            y: 0
-          }
-        };
-        case 4: { // right bottom
-          return {
-            x: info.gw,
-            y: info.gh
-          }
-        };
-        default: { // center
-          return {
-            x: info.gw / 2,
-            y: info.gh / 2 
-          }
-        };
+        case 1: // left top
+          return { x: 0, y: 0 };
+        case 2: // left bottom
+          return { x: 0, y: info.gh };
+        case 3: // right top
+          return { x: info.gw, y: 0 };
+        case 4: // right bottom
+          return { x: info.gw, y: info.gh };
+        default: // center
+          return { x: info.gw / 2, y: info.gh / 2 };
       }
     }
 
@@ -760,8 +745,7 @@ if (!window.clearImmediate) {
       // Go through the occupied points,
       // return false if the space is not available.
       var i = occupied.length;
-      // fix word splitted when enableSquareAdaptor is true
-      var boundaryGap = options.enableSquareAdaptor ? 1 : 0
+      var boundaryGap = options.enableSquareAdaptor ? 1 : 0;
       while (i--) {
         var px = gx + occupied[i][0];
         var py = gy + occupied[i][1];
@@ -782,7 +766,7 @@ if (!window.clearImmediate) {
     _this.drawItem = function(item, isDraw) {
       if (!item) {
         return
-      }    
+      }     
       if (isDraw) {
         // Actually put the text on the canvas
         drawText(item.gx, item.gy, item.info, item.word, item.weight,
@@ -925,7 +909,7 @@ if (!window.clearImmediate) {
             }
             color = gradient
           }
-          
+
           var getFadingColor = function (color) {
             // 根据词频，弱化颜色
            
@@ -941,7 +925,7 @@ if (!window.clearImmediate) {
             }
           }
           ctx.fillStyle =  getFadingColor(color);
-
+          
           
           // Translate the canvas position to the origin coordinate of where
           // the text should be put.
@@ -1175,7 +1159,7 @@ if (!window.clearImmediate) {
       var tryToPutWord = function(defaultFontSize) {
         var rotateDeg = getRotateDeg();
         // get info needed to put the text onto the canvas
-        var info = getTextInfo(word, weight, rotateDeg, 0.2, true, defaultFontSize, index);
+        var info = getTextInfo(word, weight, rotateDeg, true, defaultFontSize);
 
         lastFontSize = info.fontSize
         // not getting the info means we shouldn't be drawing this one.
@@ -1234,26 +1218,8 @@ if (!window.clearImmediate) {
           // Return true so some() will stop and also return true.
           return wordItem;
         };
-        var arr = new Array(r).fill(undefined).map((_, index) => index) // 获取半径列表
-        function shuffle(arr){
-          for(var i=arr.length-1; i>=0; i--){
-            var j = Math.floor(Math.random() * (i+1));
-            var temp = arr[i];
-            arr[i] = arr[j];
-            arr[j] = temp;
-          }
-        }
-        var isReverse = options.shape === 'circle' && options.enableOptimize && index >= options.optimizedWordNum
-
-        if (isReverse) {
-          arr = arr.reverse()
-          shuffle(arr) // 打乱数组
-        } 
-        
-        
-        for (var idx = 0; idx < arr.length; idx++) {
-          // 为了保证形状，随机半径
-          var points = getPointsAtRadius(arr[idx]);
+        while (r--) {
+          var points = getPointsAtRadius(maxRadius - r);
           if (settings.shuffle) {
             points = [].concat(points);
             shuffleArray(points);
@@ -1281,11 +1247,11 @@ if (!window.clearImmediate) {
         // we tried all distances but text won't fit, return false
         return false;
       }
-
+      
       var wordItem = tryToPutWord()
       if (wordItem) {
         return wordItem
-      } else if (options.autoFontSize  || options.shape === 'square' || options.shape === 'circle') {
+      } else if (options.autoFontSize && index >= settings.topN) {
         if (lastFontSize <= options.minFontSize) {
           return false
         } else {
@@ -1297,7 +1263,7 @@ if (!window.clearImmediate) {
             }
           }
         }
-        
+
       } else {
         return false
       }
@@ -1322,7 +1288,8 @@ if (!window.clearImmediate) {
       }
       var tryToPutSpecialWord = function(point, defaultFontSize) {
         // get info needed to put the text onto the canvas
-        var info = getTextInfo(word, weight, 0, 0.05, !point, defaultFontSize, index);
+        var rotateDeg = getRotateDeg();
+        var info = getTextInfo(word, weight, rotateDeg, false, defaultFontSize);
 
         lastFontSize = info.fontSize;
         // not getting the info means we shouldn't be drawing this one.
@@ -1347,20 +1314,18 @@ if (!window.clearImmediate) {
         var r = maxRadius + 1;
         var tryToPutWordAtEdgePoint = function(gxy, index) {
           var pointOffset = getSpecialPointOffset(info, index)
-          var gx = Math.floor(gxy[0] - pointOffset.x) < 0 ? Math.floor(gxy[0]) : Math.floor(gxy[0] - pointOffset.x);
-          var gy = Math.floor(gxy[1] - pointOffset.y) < 0 ? Math.floor(gxy[1]) : Math.floor(gxy[1] - pointOffset.y);
+          var gx = Math.floor(gxy[0] - pointOffset.x)
+          var gy = Math.floor(gxy[1] - pointOffset.y)
           var gw = info.gw;
           var gh = info.gh;
           // restrict the with of the corners
           var restrictSpecialWordSize = function(gw,index) {
             switch (index) {
-              case 1:
-              case 2:
-              case 3:
-              case 4:
-                return gw / Math.min(ngx, ngy) > 0.8 ? false : true
-              default:
+              case 0:
                 return true
+              default: 
+              return gw / Math.min(ngx, ngy) > 0.78 ? false : true
+
             }
           }
           // If we cannot fit the text at this position, return false
@@ -1385,35 +1350,12 @@ if (!window.clearImmediate) {
           _this.words.push(wordItem);
           return wordItem;
         };
-        while (r--) {
-          var _points;
-          if (!point) {
-            var _points = getPointsAtRadius(maxRadius - r);
-            if (settings.shuffle) {
-              _points = [].concat(_points);
-              shuffleArray(_points);
-            }
-          } else {
-            _points = [point];
-          }
-          // Try to fit the words by looking at each point.
-          // array.some() will stop and return true
-          // when putWordAtPoint() returns true.
-          // If all the points returns false, array.some() returns false.
-          var drawn;
-          for (var j = 0; j < _points.length; j++) {
-            var drawnItem = tryToPutWordAtEdgePoint(_points[j], index);
-            if (drawnItem) {
-              drawn = drawnItem;
-              break
-            }
-          }
+        var drawn = tryToPutWordAtEdgePoint(point, index)
           
-          // var drawn = points.some(tryToPutWordAtPoint);
-          if (drawn) {
-            // leave putWord() and return true
-            return drawn;
-          }
+        // var drawn = points.some(tryToPutWordAtPoint);
+        if (drawn) {
+          // leave putWord() and return true
+          return drawn;
         }
         // we tried all distances but text won't fit, return false
         return false
@@ -1421,10 +1363,7 @@ if (!window.clearImmediate) {
       var point = points[index];
       // init fontSize for special positions.
       // set 3.6 is suitable for corner words
-      var _ngx = Math.min(ngx, ngy);
-      var cornerSize = _ngx * ( i !== 0 ? ( g / 3.6 ) : ( g / 1.2 ))
-      var _fontSize = i < 1 ? cornerSize : undefined
-      var wordItem = tryToPutSpecialWord(point, _fontSize)
+      var wordItem = tryToPutSpecialWord(point)
       if (wordItem) {
         return wordItem
       } else {
@@ -1434,7 +1373,7 @@ if (!window.clearImmediate) {
           while(!wordItem) {
             wordItem = tryToPutSpecialWord(point, lastFontSize)
             if (wordItem) {
-              options.maxFontSize = i  === 0 ? cornerSize / 3 : lastFontSize;
+              options.maxFontSize = initMaxFontSize * settings.autoRatio
               return wordItem
             }
           }
@@ -1474,10 +1413,7 @@ if (!window.clearImmediate) {
         ngx = Math.ceil(rect.width / g);
         ngy = Math.ceil(rect.height / g);
       }
-      var boxSizeScale = 400 / g
-      fontSizeScale = options.enableSquareAdaptor ? Math.min((Math.min(ngx, ngy) / boxSizeScale), 1) : 1// 以 400 宽度为基准，按比例缩放 weiget 返回的大小
-      totalFontSizeScale = 1
-      originalFontSize = options.maxFontSize ? options.maxFontSize : undefined
+
       // Sending a wordcloudstart event which cause the previous loop to stop.
       // Do nothing if the event is canceled.
       if (!sendEvent('wordcloudstart', true)) {
@@ -1501,6 +1437,7 @@ if (!window.clearImmediate) {
         rightTop,
         rightbottom
       ];
+      initMaxFontSize = options.maxFontSize;
       // Maxium radius to look for space
       maxRadius = Math.floor(Math.sqrt(ngx * ngx + ngy * ngy));
       /* Clear the canvas only if the clearCanvas is set,
@@ -1604,7 +1541,6 @@ if (!window.clearImmediate) {
         }
       }
       cacheGrid = JSON.parse(JSON.stringify(grid));
-      totalFontSizeScale = 1
       // fill the infoGrid with empty state if we need it
       if (settings.hover || settings.click) {
         interactive = true;
@@ -1679,34 +1615,25 @@ if (!window.clearImmediate) {
         }
         escapeTime = (new Date()).getTime();
         var drawn;
-        if (settings.enableSquareAdaptor) {
+        if (settings.enableSquareAdaptor && i < 5) {
           drawn = putSpecialWord(settings.list[i], i);
-        }
-        if (!drawn) {
+        } else if (!drawn) {
           drawn = putWord(settings.list[i], i);
         }
-        var enableAutoSizeFix = settings.enableSquareAdaptor || options.shape === 'circle'
-        // 至少保证渲染35个词（circle 限制 200）
-        // 当 maxFixLen 无法保证可以放下时，减小字体大小
-        var minWord = options.shape === 'circle' ? 200 : 35
-        var maxFixLen =  Math.min(settings.list.length, minWord)
-        var minFontSizeScale = options.shape === 'square' ? 0.3 : 0.1
-        if (enableAutoSizeFix && (i === maxFixLen - 1)) {
-          for (let topN = 0; topN < maxFixLen; topN++) {
-            setTimeout(() => {
-              _this.drawItem(_this.words[topN], true)
-            }, 0);
+
+        if (i === settings.topN) {
+          for (let topN = 0; topN <= settings.topN; topN++) {
+            _this.drawItem(_this.words[topN], true)
           }
-        } else if (!enableAutoSizeFix || i >= maxFixLen || totalFontSizeScale < minFontSizeScale) {
+        } else if (i > settings.topN) {
           _this.drawItem(drawn, true)
         }
-        if (enableAutoSizeFix && (i < maxFixLen && !drawn && totalFontSizeScale >= minFontSizeScale)) {
-          _this.words = [];
-          grid = JSON.parse(JSON.stringify(cacheGrid));
-          if (options.shape === 'circle') {
-            options.maxFontSize = originalFontSize || (ngx * g);
-          }
-          totalFontSizeScale = totalFontSizeScale - 0.05; // 整体减小字体大小
+
+        if (i < settings.topN && !drawn) {
+          options.maxFontSize = options.maxFontSize * settings.autoRatio
+          initMaxFontSize = options.maxFontSize
+          _this.words = []
+          grid = JSON.parse(JSON.stringify(cacheGrid))
           i = 0
         } else {
           i++;

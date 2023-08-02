@@ -112,7 +112,7 @@
         var list3 = [
             ['湿敷',1176],
             ['痘痘',1009],
-            ['闭口',866],
+            ['闭口不错',866],
             ['油皮',791],
             ['保湿',779],
             ['痘肌',763],
@@ -160,9 +160,10 @@
                     return '<div>' + item[0] + '</div>' + '<div>' + item[1] + '</div>'
                 }
             },
+            autoFontSize: true,
             fontWeight: '500',
             fontFamily: '微软雅黑',
-            gridSize: 6,
+            gridSize: 0,
             effect: 'test',
             shuffle: false,
             maxFontSize: 200,
@@ -171,9 +172,10 @@
             minFontSize: 20,
             rotateRatio: 0,
             drawOutOfBound: false,
-
+            topN: 5,
             enableSquareAdaptor: true,
             shape: 'square',
+            autoRatio: 0.95,
             hover: function(item) {
                 // console.log(item)
             },
