@@ -1312,6 +1312,45 @@ if (!window.clearImmediate) {
           }
         }
         var r = maxRadius + 1;
+        var countCharacters = function(str) {
+          let totalCount = 0;
+        
+          for (let i = 0; i < str.length; i++) {
+            const charCode = str.charCodeAt(i);
+            if (charCode >= 0x4E00 && charCode <= 0x9FFF) {
+              totalCount += 2; // 中文字符占用两个字节
+            } else {
+              totalCount += 1; // 非中文字符占用一个字节
+            }
+          }
+        
+          return totalCount;
+        }
+        var calculateWidthPercentage = function(str) {
+          var len = countCharacters(str)
+          var widthMapping = [
+            { characters: 4, widthPercentage: 0.55 },
+            { characters: 6, widthPercentage: 0.62 },
+            { characters: 8, widthPercentage: 0.80 },
+          ]
+          let closestEntry = null;
+          let closestDifference = Infinity;
+
+          // 查找映射表中最接近的字符数条目
+          for (const entry of widthMapping) {
+            const difference = Math.abs(len - entry.characters);
+            if (difference < closestDifference) {
+              closestDifference = difference;
+              closestEntry = entry;
+            }
+          }
+
+          if (closestEntry) {
+            return closestEntry.widthPercentage;
+          } else {
+            return 0.75;
+          }
+        }
         var tryToPutWordAtEdgePoint = function(gxy, index) {
           var pointOffset = getSpecialPointOffset(info, index)
           var gx = Math.floor(gxy[0] - pointOffset.x)
@@ -1319,13 +1358,13 @@ if (!window.clearImmediate) {
           var gw = info.gw;
           var gh = info.gh;
           // restrict the with of the corners
+          var widthPercentage = calculateWidthPercentage(word)
           var restrictSpecialWordSize = function(gw,index) {
             switch (index) {
               case 0:
                 return true
               default: 
-              return gw / Math.min(ngx, ngy) > 0.78 ? false : true
-
+                return( gw / Math.min(ngx, ngy)) <= widthPercentage
             }
           }
           // If we cannot fit the text at this position, return false
@@ -1363,6 +1402,7 @@ if (!window.clearImmediate) {
       var point = points[index];
       // init fontSize for special positions.
       // set 3.6 is suitable for corner words
+      var _fz = i ===  0 ? undefined : options.maxFontSize
       var wordItem = tryToPutSpecialWord(point)
       if (wordItem) {
         return wordItem
@@ -1373,7 +1413,7 @@ if (!window.clearImmediate) {
           while(!wordItem) {
             wordItem = tryToPutSpecialWord(point, lastFontSize)
             if (wordItem) {
-              options.maxFontSize = initMaxFontSize * settings.autoRatio
+              options.maxFontSize = options.maxFontSize * settings.autoRatio
               return wordItem
             }
           }
@@ -1445,6 +1485,7 @@ if (!window.clearImmediate) {
       grid = [];
 
       var gx, gy, i, cacheGrid;
+      var startMaxFontSize = options.maxFontSize;
       elements.forEach(function(el) {
         el.style.backgroundColor = settings.backgroundColor
 
@@ -1621,16 +1662,18 @@ if (!window.clearImmediate) {
           drawn = putWord(settings.list[i], i);
         }
 
-        if (i === settings.topN) {
-          for (let topN = 0; topN <= settings.topN; topN++) {
+        var _topNSize = options.enableSquareAdaptor ? Math.min(30, options.list.length) : settings.topN + 1
+        if (i === _topNSize - 1) {
+          for (let topN = 0; topN < _topNSize; topN++) {
             _this.drawItem(_this.words[topN], true)
           }
-        } else if (i > settings.topN) {
+        } else if (i >= _topNSize) {
           _this.drawItem(drawn, true)
         }
 
-        if (i < settings.topN && !drawn) {
-          options.maxFontSize = options.maxFontSize * settings.autoRatio
+        if (i < _topNSize - 1 && !drawn) {
+          startMaxFontSize = startMaxFontSize * settings.autoRatio
+          options.maxFontSize = startMaxFontSize
           initMaxFontSize = options.maxFontSize
           _this.words = []
           grid = JSON.parse(JSON.stringify(cacheGrid))

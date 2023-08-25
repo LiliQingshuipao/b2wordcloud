@@ -28,6 +28,108 @@
         var mark = 0;
         var idx = 1032
         // var list = []
+        var list4 = [
+  {
+    "label": "黑眼圈",
+    "value": "813"
+  },
+  {
+    "label": "细纹",
+    "value": "640"
+  },
+  {
+    "label": "熬夜",
+    "value": "623"
+  },
+  {
+    "label": "保湿",
+    "value": "419"
+  },
+  {
+    "label": "眼周",
+    "value": "374"
+  },
+  {
+    "label": "滋润",
+    "value": "328"
+  },
+  {
+    "label": "成分",
+    "value": "324"
+  },
+  {
+    "label": "吸收",
+    "value": "318"
+  },
+  {
+    "label": "抗老",
+    "value": "318"
+  },
+  {
+    "label": "清爽",
+    "value": "312"
+  },
+  {
+    "label": "紧致",
+    "value": "277"
+  },
+  {
+    "label": "年轻",
+    "value": "244"
+  },
+  {
+    "label": "晚上",
+    "value": "236"
+  },
+  {
+    "label": "修护",
+    "value": "183"
+  },
+  {
+    "label": "按摩",
+    "value": "165"
+  },
+  {
+    "label": "修复",
+    "value": "104"
+  },
+  {
+    "label": "使用感好",
+    "value": "100"
+  },
+  {
+    "label": "细腻",
+    "value": "100"
+  },
+  {
+    "label": "干皮",
+    "value": "97"
+  },
+  {
+    "label": "提亮",
+    "value": "96"
+  },
+  {
+    "label": "搭配",
+    "value": "92"
+  },
+  {
+    "label": "夏天",
+    "value": "92"
+  },
+  {
+    "label": "不油腻",
+    "value": "91"
+  },
+  {
+    "label": "鱼尾纹",
+    "value": "91"
+  },
+  {
+    "label": "好推开",
+    "value": "88"
+  }
+].map(v => {return [v.label, Number(v.value)]})
         var list2 = [
             ['测试', 104],
             ['日常', 85],
@@ -154,7 +256,7 @@
         // }
         var wordCloud = new B2wordcloud(document.getElementById("chart"), {
             // renderer: 'div',
-            list: list3,
+            list: list4,
             tooltip: {
                 formatter: function(item) {
                     return '<div>' + item[0] + '</div>' + '<div>' + item[1] + '</div>'
@@ -163,19 +265,20 @@
             autoFontSize: true,
             fontWeight: '500',
             fontFamily: '微软雅黑',
-            gridSize: 0,
-            effect: 'test',
-            shuffle: false,
+            gridSize: 5,
+            effect: 'equal',
             maxFontSize: 200,
-            enableOptimize: true,
             optimizedWordNum: 5,
-            minFontSize: 20,
+            minFontSize: 15,
             rotateRatio: 0,
             drawOutOfBound: false,
-            topN: 5,
+            topN: 1,
+            clientHeight: 450,
+            clientWidth: 450,
             enableSquareAdaptor: true,
             shape: 'square',
             autoRatio: 0.95,
+            shuffle: false,
             hover: function(item) {
                 // console.log(item)
             },
