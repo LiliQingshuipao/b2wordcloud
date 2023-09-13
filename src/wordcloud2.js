@@ -1663,7 +1663,7 @@ if (!window.clearImmediate) {
         }
 
         var _topNSize = options.enableSquareAdaptor ? Math.min(30, options.list.length) : settings.topN + 1
-        if (i === _topNSize - 1) {
+        if (drawn && i === _topNSize - 1) {
           for (let topN = 0; topN < _topNSize; topN++) {
             _this.drawItem(_this.words[topN], true)
           }
@@ -1671,7 +1671,7 @@ if (!window.clearImmediate) {
           _this.drawItem(drawn, true)
         }
 
-        if (i < _topNSize - 1 && !drawn) {
+        if (i <= _topNSize - 1 && !drawn) {
           startMaxFontSize = startMaxFontSize * settings.autoRatio
           options.maxFontSize = startMaxFontSize
           initMaxFontSize = options.maxFontSize
