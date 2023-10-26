@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>适配正方形</title>
+    <style>
+        html, body, .test{
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+        #chart, #chart2 {
+            width: 450px;
+            height: 450px;
+            margin: 0 auto
+        }
+        .panel {
+          width: 100%;
+          height: 50px;
+          border-bottom: 1px solid #ccc;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          column-gap: 10px;
+          margin-bottom: 20px;
+        }
+        .button {
+          background-color: #007BFF; /* 背景颜色 */
+          color: #fff; /* 文字颜色 */
+          padding: 10px 20px; /* 内边距 */
+          border: none; /* 去掉边框 */
+          border-radius: 5px; /* 圆角 */
+          cursor: pointer; /* 鼠标指针形状 */
+        }
+    </style>
+</head>
+<body>
+    <div class="test">
+        <div class="panel">
+          <button id="btn" class="button">转换100次数据</button>
+          <button id="btn1" class="button">渲染正方形</button>
+          <button id="btn2" class="button">渲染普通形状</button>
+        </div>
+        <div id="chart"></div> 
+        <div id="chart1"></div> 
+    </div>
+    <script src="dist/b2wordcloud.js"></script>
+    <script>
+        var mark = 0;
+        var list4 = [{"label":"防晒","value":"269"},{"label":"淡斑","value":"114"},{"label":"油皮","value":"86"},{"label":"质地","value":"70"},{"label":"肤感","value":"54"},{"label":"成膜","value":"45"},{"label":"夏天","value":"42"},{"label":"清爽","value":"39"},{"label":"美白","value":"39"},{"label":"成分","value":"35"},{"label":"日常","value":"33"},{"label":"烟酰胺","value":"27"},{"label":"混油","value":"26"},{"label":"抗氧化","value":"26"},{"label":"干皮","value":"25"},{"label":"不搓泥","value":"23"},{"label":"推开","value":"23"},{"label":"全波段","value":"21"},{"label":"黑色素","value":"19"},{"label":"温和","value":"18"},{"label":"高倍","value":"17"},{"label":"传明酸","value":"15"},{"label":"光泽感","value":"15"},{"label":"敏感肌","value":"13"},{"label":"不油腻","value":"11"}].map(v => {return [v.label, Number(v.value)]})
+        var squareOptions = {
+            // renderer: 'div',
+            list: list4,
+            tooltip: {
+                formatter: function(item) {
+                    return '<div>' + item[0] + '</div>' + '<div>' + item[1] + '</div>'
+                }
+            },
+            autoFontSize: true,
+            fontFamily: '微软雅黑',
+            gridSize: 5,
+            effect: 'equal',
+            maxFontSize: 200,
+            optimizedWordNum: 5,
+            minFontSize: 18,
+            rotateRatio: 0,
+            drawOutOfBound: false,
+            topN: 1,
+            fontWeight: 500,
+            clientHeight: 450,
+            clientWidth: 450,
+            enableSquareAdaptor: true,
+            shape: 'square',
+            autoRatio: 0.95,
+            shuffle: false,
+            hover: function(item) {
+                // console.log(item)
+            },
+            color: function(){ return '#00bcbe' },
+            click: function(a, b, c, index) {
+                wordCloud.dispatchAction({
+                    type: mark === index ? 'downplay' : 'highlight',
+                    dataIndex: index,
+                    keepAlive: true
+                })
+                if (mark != index) { 
+                    mark = index
+                } else {
+                    mark = -1
+                }
+            }
+        }
+        var circleOptions = {  ...squareOptions, shape: 'circle', enableSquareAdaptor: false }
+        var renderSquare = function () {
+          var chart = document.getElementById("chart")
+          chart.innerHTML = ''
+          new B2wordcloud(chart, squareOptions)
+        }
+        var renderCircle = function () {
+          var chart1 = document.getElementById("chart1")
+          chart1.innerHTML = ''
+          new B2wordcloud(chart1, circleOptions)
+        }
+        var render = function () {
+          renderCircle()
+          renderSquare()
+        }
+        render()
+    </script>
+    <script>
+      const button = document.getElementById('btn');
+      function convertBase64ToImgFile(dataUrl, fileName) {
+        const arr = dataUrl.split(',')
+        const mime = arr[0]?.match(/:(.*?);/)[1] ?? ''
+        const bytes = window.atob(arr[1])
+        let len = bytes.length
+        const u8arr = new Uint8Array(len)
+        while (len--) {
+          u8arr[len] = bytes.charCodeAt(len)
+        }
+        return new File([u8arr], fileName, { type: mime })
+      }
+
+      // 添加点击事件监听器
+      button.addEventListener('click', function() {
+        const canvas = document.getElementsByTagName('canvas');
+        if (canvas.length > 0) {
+          const url = canvas[0].toDataURL('image/png');
+          const len = 100
+          for (let i = 0; i < len; i++) {
+            const file = convertBase64ToImgFile(url, 'test.png')
+          }
+          alert(`渲染完成`)
+        }
+      });
+      const button1 = document.getElementById('btn1');
+      const button2 = document.getElementById('btn2');
+      button1.addEventListener('click', function() {
+        renderSquare()
+      });
+      button2.addEventListener('click', function() {
+        renderCircle()
+      });
+    </script>
+</body>
+</html>

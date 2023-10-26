@@ -72,6 +72,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	    return obj1;
 	}
+	var getPixelRatio = function getPixelRatio(context) {
+	    var backingStore = context.backingStorePixelRatio || context.webkitBackingStorePixelRatio || context.mozBackingStorePixelRatio || context.msBackingStorePixelRatio || context.oBackingStorePixelRatio || context.backingStorePixelRatio || 1;
+	    return (window.devicePixelRatio || 1) / backingStore * 4; // 处理截图模糊的问题
+	};
 	
 	// https://github.com/timdream/wordcloud2.js/blob/c236bee60436e048949f9becc4f0f67bd832dc5c/index.js#L233
 	function updateCanvasMask(shapeCanvas, maskCanvas) {
@@ -310,10 +314,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	            img.onload = function () {
 	                _this2._maskImg = img;
 	                _this2._shapeCanvas = document.createElement('canvas');
-	                _this2._shapeCanvas.width = img.width;
-	                _this2._shapeCanvas.height = img.height;
 	                var ctx = _this2._shapeCanvas.getContext('2d');
-	                ctx.drawImage(img, 0, 0, img.width, img.height);
+	                var ratio = getPixelRatio(ctx);
+	                _this2._shapeCanvas.style.width = img.width + 'px';
+	                _this2._shapeCanvas.style.height = img.height + 'px';
+	
+	                _this2._shapeCanvas.width = img.width * ratio;
+	                _this2._shapeCanvas.height = img.height * ratio;
+	                ctx.imageSmoothingEnabled = false;
+	                ctx.imageSmoothingQuality = 'high';
+	
+	                ctx.drawImage(img, 0, 0, img.width * ratio, img.height * ratio);
+	                ctx.scale(ratio, ratio);
 	                var imageData = ctx.getImageData(0, 0, _this2._shapeCanvas.width, _this2._shapeCanvas.height);
 	                var newImageData = ctx.createImageData(imageData);
 	                for (var i = 0; i < imageData.data.length; i += 4) {
@@ -608,6 +620,40 @@ return /******/ (function(modules) { // webpackBootstrap
 	      if (!Array.isArray(elements)) {
 	        elements = [elements];
 	      }
+	      var needBackground = function needBackground() {
+	        if (!settings.backgroundColor || settings.backgroundColor === 'transparent') {
+	          return false;
+	        } else {
+	          return true;
+	        }
+	      };
+	      // 更新遮盖层填充色
+	      var updateCanvasMask = function updateCanvasMask() {
+	        var maskCtx = maskCanvas.getContext('2d');
+	        var imageData = maskCtx.getImageData(0, 0, maskCanvas.width, maskCanvas.height);
+	        var bgPixel = getBgPixelColor(settings.backgroundColor);
+	
+	        var maskBgPixel = getBgPixelColor('#ffffff');
+	
+	        for (var i = 0; i < imageData.data.length; i += 4) {
+	          var k = 0;
+	          var flag = true;
+	          while (k < 4) {
+	            if (imageData.data[i + k] !== maskBgPixel[k]) {
+	              flag = false;
+	              break;
+	            }
+	            k++;
+	          }
+	          if (flag) {
+	            imageData.data[i] = bgPixel[0];
+	            imageData.data[i + 1] = bgPixel[1];
+	            imageData.data[i + 2] = bgPixel[2];
+	            imageData.data[i + 3] = bgPixel[3];
+	          }
+	        }
+	        maskCtx.putImageData(imageData, 0, 0);
+	      };
 	      // 获取像素比
 	      var getPixelRatio = function getPixelRatio(context) {
 	        var backingStore = context.backingStorePixelRatio || context.webkitBackingStorePixelRatio || context.mozBackingStorePixelRatio || context.msBackingStorePixelRatio || context.oBackingStorePixelRatio || context.backingStorePixelRatio || 1;
@@ -1844,6 +1890,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	          }, this);
 	        }
 	      };
+	      var getBgPixelColor = function getBgPixelColor(color) {
+	        var tempCanvas = document.createElement('canvas');
+	        var bctx = tempCanvas.getContext('2d');
+	        bctx.fillStyle = color;
+	        bctx.fillRect(0, 0, 1, 1);
+	        var bgPixel = bctx.getImageData(0, 0, 1, 1).data;
+	        tempCanvas = bctx = undefined;
+	        return bgPixel;
+	      };
 	
 	      /* Start drawing on a canvas */
 	      var start = function start() {
@@ -1886,7 +1941,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	        var gx, gy, i, cacheGrid;
 	        var startMaxFontSize = options.maxFontSize;
 	        elements.forEach(function (el) {
-	          el.style.backgroundColor = settings.backgroundColor;
 	
 	          if (el.getContext) {
 	            var ctx = el.getContext('2d');
@@ -1912,12 +1966,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        } else {
 	          /* Determine bgPixel by creating
 	             another canvas and fill the specified background color. */
-	          var bctx = document.createElement('canvas').getContext('2d');
-	
-	          // bctx.fillStyle = settings.backgroundColor;
-	          bctx.fillStyle = '#ffffff';
-	          bctx.fillRect(0, 0, 1, 1);
-	          var bgPixel = bctx.getImageData(0, 0, 1, 1).data;
+	          var bgPixel = getBgPixelColor('#ffffff');
 	
 	          /* Read back the pixels of the canvas we got to tell which part of the
 	             canvas is empty.
@@ -1949,7 +1998,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	            }
 	          }
 	
-	          imageData = bctx = bgPixel = undefined;
+	          imageData = bgPixel = undefined;
+	        }
+	        // update maskCanvas fill Color
+	        updateCanvasMask();
+	        if (needBackground()) {
+	
+	          _this.maskCanvas = maskCanvas;
 	        }
 	        // set unavailable points when the size is not square
 	        if (options.enableSquareAdaptor && _ngOffset !== 0) {
@@ -2098,6 +2153,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	          canvasEl.width = canvasEl.width * ratio;
 	          canvasEl.height = canvasEl.height * ratio;
 	          canvasCtx.scale(ratio, ratio);
+	          if (needBackground()) {
+	            //set to draw behind current content
+	            canvasCtx.globalCompositeOperation = "source-over";
+	            // canvasCtx.fillRect(0,0,canvasEl.width,canvasEl.height);
+	            canvasCtx.drawImage(maskCanvas, 0, 0);
+	          }
 	        }
 	      };
 	
@@ -2124,6 +2185,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	          }
 	          _this.drawItem(item, true);
 	        });
+	        var canvasCtx = el.getContext('2d');
+	        if (canvasCtx && _this.maskCanvas) {
+	          canvasCtx.globalCompositeOperation = "source-over";
+	          // canvasCtx.fillRect(0,0,canvasEl.width,canvasEl.height);
+	          canvasCtx.drawImage(_this.maskCanvas, 0, 0);
+	        }
 	      });
 	    };
 	    WordCloud.prototype.downplay = function (index, isKeepAlive) {
@@ -2140,6 +2207,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	          }
 	          _this.drawItem(item, true);
 	        });
+	        var canvasCtx = el.getContext('2d');
+	        if (canvasCtx && _this.maskCanvas) {
+	          canvasCtx.globalCompositeOperation = "source-over";
+	          // canvasCtx.fillRect(0,0,canvasEl.width,canvasEl.height);
+	          canvasCtx.drawImage(_this.maskCanvas, 0, 0);
+	        }
 	      });
 	    };
 	

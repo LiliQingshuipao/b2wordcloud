@@ -164,6 +164,40 @@ if (!window.clearImmediate) {
     if (!Array.isArray(elements)) {
       elements = [elements];
     }
+    var needBackground = function () {
+      if (!settings.backgroundColor || settings.backgroundColor === 'transparent') {
+        return false
+      } else {
+        return true
+      }
+    }
+    // 更新遮盖层填充色
+    var updateCanvasMask = function () {
+      var maskCtx = maskCanvas.getContext('2d')
+      var imageData = maskCtx.getImageData(0, 0, maskCanvas.width, maskCanvas.height);
+      var bgPixel = getBgPixelColor(settings.backgroundColor)
+      
+      var maskBgPixel = getBgPixelColor('#ffffff')
+      
+      for (let i = 0; i < imageData.data.length; i += 4) {
+        var k = 0
+        var flag = true
+        while (k < 4) {
+          if (imageData.data[i + k] !== maskBgPixel[k]) {
+            flag = false
+            break
+          }
+          k++
+        }
+        if (flag) {
+          imageData.data[i] = bgPixel[0];
+          imageData.data[i+1] = bgPixel[1];
+          imageData.data[i+2] = bgPixel[2];
+          imageData.data[i+3] = bgPixel[3];
+        }
+      }
+      maskCtx.putImageData(imageData, 0, 0);
+    }
     // 获取像素比
     var getPixelRatio = function (context) {
       var backingStore = context.backingStorePixelRatio ||
@@ -1438,6 +1472,15 @@ if (!window.clearImmediate) {
         }, this);
       }
     };
+    var getBgPixelColor = function getBgPixelColor(color) {
+      var tempCanvas = document.createElement('canvas')
+      var bctx = tempCanvas.getContext('2d');
+      bctx.fillStyle = color
+      bctx.fillRect(0, 0, 1, 1);
+      var bgPixel = bctx.getImageData(0, 0, 1, 1).data;
+      tempCanvas = bctx = undefined;
+      return bgPixel
+    }
 
     /* Start drawing on a canvas */
     var start = function start() {
@@ -1487,7 +1530,6 @@ if (!window.clearImmediate) {
       var gx, gy, i, cacheGrid;
       var startMaxFontSize = options.maxFontSize;
       elements.forEach(function(el) {
-        el.style.backgroundColor = settings.backgroundColor
 
         if (el.getContext) {
           var ctx = el.getContext('2d');
@@ -1513,12 +1555,7 @@ if (!window.clearImmediate) {
       } else {
         /* Determine bgPixel by creating
            another canvas and fill the specified background color. */
-        var bctx = document.createElement('canvas').getContext('2d');
-
-        // bctx.fillStyle = settings.backgroundColor;
-        bctx.fillStyle = '#ffffff'
-        bctx.fillRect(0, 0, 1, 1);
-        var bgPixel = bctx.getImageData(0, 0, 1, 1).data;
+        var bgPixel = getBgPixelColor('#ffffff')
 
         /* Read back the pixels of the canvas we got to tell which part of the
            canvas is empty.
@@ -1552,7 +1589,13 @@ if (!window.clearImmediate) {
           }
         }
 
-        imageData = bctx = bgPixel = undefined;
+        imageData = bgPixel = undefined;
+      }
+      // update maskCanvas fill Color
+      updateCanvasMask();
+      if (needBackground()) {
+        
+        _this.maskCanvas = maskCanvas;
       }
       // set unavailable points when the size is not square
       if (options.enableSquareAdaptor&& _ngOffset !== 0) {
@@ -1701,6 +1744,12 @@ if (!window.clearImmediate) {
         canvasEl.width = canvasEl.width * ratio
         canvasEl.height = canvasEl.height * ratio
         canvasCtx.scale(ratio, ratio)
+        if (needBackground()) {
+          //set to draw behind current content
+          canvasCtx.globalCompositeOperation = "source-over";
+          // canvasCtx.fillRect(0,0,canvasEl.width,canvasEl.height);
+          canvasCtx.drawImage(maskCanvas, 0, 0)
+        }
       }
     };
 
@@ -1727,6 +1776,12 @@ if (!window.clearImmediate) {
         }
         _this.drawItem(item, true)
       })
+      var canvasCtx = el.getContext('2d')
+      if (canvasCtx && _this.maskCanvas) {
+        canvasCtx.globalCompositeOperation = "source-over";
+        // canvasCtx.fillRect(0,0,canvasEl.width,canvasEl.height);
+        canvasCtx.drawImage(_this.maskCanvas, 0, 0)
+      }
     })
   }
   WordCloud.prototype.downplay = function(index, isKeepAlive) {
@@ -1743,6 +1798,12 @@ if (!window.clearImmediate) {
         }
         _this.drawItem(item, true)
       })
+      var canvasCtx = el.getContext('2d')
+      if (canvasCtx && _this.maskCanvas) {
+        canvasCtx.globalCompositeOperation = "source-over";
+        // canvasCtx.fillRect(0,0,canvasEl.width,canvasEl.height);
+        canvasCtx.drawImage(_this.maskCanvas, 0, 0)
+      }
     })
   }
 

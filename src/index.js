@@ -8,6 +8,15 @@ function deepMerge(obj1, obj2) {
     }
     return obj1;
 }
+var getPixelRatio = function (context) {
+    var backingStore = context.backingStorePixelRatio ||
+        context.webkitBackingStorePixelRatio ||
+        context.mozBackingStorePixelRatio ||
+        context.msBackingStorePixelRatio ||
+        context.oBackingStorePixelRatio ||
+        context.backingStorePixelRatio || 1;
+    return ((window.devicePixelRatio || 1) / backingStore) * 4; // 处理截图模糊的问题
+};
 
 // https://github.com/timdream/wordcloud2.js/blob/c236bee60436e048949f9becc4f0f67bd832dc5c/index.js#L233
 function updateCanvasMask(shapeCanvas, maskCanvas) {
@@ -30,7 +39,7 @@ function updateCanvasMask(shapeCanvas, maskCanvas) {
 
     var imageData = ctx.getImageData(0, 0, maskCanvas.width, maskCanvas.height);
     var newImageData = ctx.createImageData(imageData);
-    for (var i = 0; i < imageData.data.length; i += 4) {
+    for (var i = 0; i < imageData.data.length; i += 4) {      
         if (imageData.data[i + 3] > 128) {
             newImageData.data[i] = bgPixel[0];
             newImageData.data[i + 1] = bgPixel[1];
@@ -225,10 +234,18 @@ export class B2wordcloud {
         img.onload = () => {
             this._maskImg = img
             this._shapeCanvas = document.createElement('canvas');
-            this._shapeCanvas.width = img.width;
-            this._shapeCanvas.height = img.height;
             var ctx = this._shapeCanvas.getContext('2d');
-            ctx.drawImage(img, 0, 0, img.width, img.height);
+            var ratio = getPixelRatio(ctx)
+            this._shapeCanvas.style.width = img.width + 'px'
+            this._shapeCanvas.style.height = img.height + 'px'
+
+            this._shapeCanvas.width = img.width * ratio;
+            this._shapeCanvas.height = img.height * ratio;
+            ctx.imageSmoothingEnabled = false
+            ctx.imageSmoothingQuality = 'high'
+
+            ctx.drawImage(img, 0, 0, img.width * ratio, img.height * ratio);
+            ctx.scale(ratio, ratio)
             var imageData = ctx.getImageData(
                 0, 0, this._shapeCanvas.width, this._shapeCanvas.height);
             var newImageData = ctx.createImageData(imageData);
