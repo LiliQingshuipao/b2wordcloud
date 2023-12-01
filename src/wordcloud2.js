@@ -208,6 +208,65 @@ if (!window.clearImmediate) {
           context.backingStorePixelRatio || 1;
           return ((window.devicePixelRatio || 1) / backingStore) * 2; // 处理截图模糊的问题
     };
+    function calculateVariance(data) {
+      const n = data.length;
+      if (n <= 1) {
+        return 0; // 方差需要至少两个数据点
+      }
+    
+      // 计算平均值
+      const mean = data.reduce(function(sum, x) {
+        return sum + x;
+      }, 0) / n;
+    
+      // 计算每个数据点与平均值的差的平方
+      const squaredDifferences = data.map(function(x) {
+        return Math.pow(x - mean, 2);
+      });
+    
+      // 计算方差
+      const variance = squaredDifferences.reduce(function(sum, x) {
+        return sum + x;
+      }, 0) / (n - 1);
+    
+      return variance;
+    }
+    var measureTextWidth = function(text, fontSize) {
+      var ctx = document.createElement('canvas').getContext('2d');
+      ctx.font = fontSize + 'px ' + settings.fontFamily;
+      const width = ctx.measureText(text).width;
+      return width;
+    }
+    var getSpecialWordSize = function () {
+      var topWords = settings.list.slice(1, 5)
+      var wordsSize = topWords.map(function(item) {
+        var word = Array.isArray(item) ? item[0] : item.word
+        return measureTextWidth(word, 12)
+      })
+      return wordsSize
+    }
+
+    // 初始化 specialState
+    var initSpecialState = function () {
+      // 计算四个角落的词比例
+      var wordsSize = getSpecialWordSize()
+      var maxValue = Math.max.apply(null, wordsSize)
+      var maxIndex = wordsSize.findIndex(v => v === maxValue)
+      var wordRatio = wordsSize.map(function(size, j) {
+        return j === maxIndex + 1 ? Math.min(maxValue / size, 1.5) : 1
+      })
+      console.log('wordRatio', wordRatio)
+      return {
+        topFontSize: undefined,
+        topHeight: undefined,
+        topWidth: undefined,
+        fontSizeList: new Array(5).fill(undefined),
+        wordRatio: [1].concat(wordRatio),
+        topUsage: 0,
+        bottomUsage: 0,
+      }
+    }
+    
     var canvasEl = null
     var ratio = 1
     elements.forEach(function(el, i) {
@@ -400,9 +459,12 @@ if (!window.clearImmediate) {
     var grid, // 2d array containing filling information
       ngx, ngy, // width and height of the grid
       center, // position of the center of the cloud
+      cornersMap,
       corners, // positions of the corders of the square, priority processing before other positions. (except center
       initMaxFontSize, // save the font size of the biggest text before draw
       maxRadius;
+
+    var specialState = initSpecialState();
 
     /* timestamp for measuring each putWord() action */
     var escapeTime;
@@ -703,23 +765,13 @@ if (!window.clearImmediate) {
             while (y--) {
               x = g;
               while (x--) {
-                if (imageData[((gy * g + y) * width +
-                               (gx * g + x)) * 4 + 3]) {
+                if (imageData[((gy * g + y) * width + (gx * g + x)) * 4 + 3]) {
                   occupied.push([gx, gy]);
 
-                  if (gx < bounds[3]) {
-                    bounds[3] = gx;
-                  }
-                  if (gx > bounds[1]) {
-                    bounds[1] = gx;
-                  }
-                  if (gy < bounds[0]) {
-                    bounds[0] = gy;
-                  }
-                  if (gy > bounds[2]) {
-                    bounds[2] = gy;
-                  }
-
+                  bounds[3] = Math.min(gx, bounds[3]);
+                  bounds[0] = Math.min(gy, bounds[0]);
+                  bounds[1] = Math.max(gx, bounds[1]);
+                  bounds[2] = Math.max(gy, bounds[2]);  
                   if (debug) {
                     fctx.fillStyle = 'rgba(255, 0, 0, 0.5)';
                     fctx.fillRect(gx * g, gy * g, g - 0.5, g - 0.5);
@@ -759,15 +811,29 @@ if (!window.clearImmediate) {
       };
     };
     // return the word draw start position offset for the special points
-    var getSpecialPointOffset = function getSpecialPointOffset(info, index) {
-      switch (index) {
-        case 1: // left top
+    // var getSpecialPointOffset = function getSpecialPointOffset(info, index) {
+    //   switch (index) {
+    //     case 1: // left top
+    //       return { x: 0, y: 0 };
+    //     case 2: // left bottom
+    //       return { x: 0, y: info.gh };
+    //     case 3: // right top
+    //       return { x: info.gw, y: 0 };
+    //     case 4: // right bottom
+    //       return { x: info.gw, y: info.gh };
+    //     default: // center
+    //       return { x: info.gw / 2, y: info.gh / 2 };
+    //   }
+    // }
+    var getSpecialPointOffset = function getSpecialPointOffset(info, key) {
+      switch (key) {
+        case 'leftTop': // left top
           return { x: 0, y: 0 };
-        case 2: // left bottom
+        case 'leftBottom': // left bottom
           return { x: 0, y: info.gh };
-        case 3: // right top
+        case 'rightTop': // right top
           return { x: info.gw, y: 0 };
-        case 4: // right bottom
+        case 'rightbottom': // right bottom
           return { x: info.gw, y: info.gh };
         default: // center
           return { x: info.gw / 2, y: info.gh / 2 };
@@ -1173,6 +1239,46 @@ if (!window.clearImmediate) {
         ctx.restore();
       }
     };
+    var countCharacters = function(str) {
+      let totalCount = 0;
+    
+      for (let i = 0; i < str.length; i++) {
+        const charCode = str.charCodeAt(i);
+        if (charCode >= 0x4E00 && charCode <= 0x9FFF) {
+          totalCount += 2; // 中文字符占用两个字节
+        } else {
+          totalCount += 1; // 非中文字符占用一个字节
+        }
+      }
+    
+      return totalCount;
+    }
+    
+    var calculateWidthPercentage = function(str) {
+      var len = countCharacters(str)
+      var widthMapping = [
+        { characters: 4, widthPercentage: 0.55 },
+        { characters: 6, widthPercentage: 0.62 },
+        { characters: 8, widthPercentage: 0.70 },
+      ]
+      let closestEntry = null;
+      let closestDifference = Infinity;
+
+      // 查找映射表中最接近的字符数条目
+      for (const entry of widthMapping) {
+        const difference = Math.abs(len - entry.characters);
+        if (difference < closestDifference) {
+          closestDifference = difference;
+          closestEntry = entry;
+        }
+      }
+
+      if (closestEntry) {
+        return closestEntry.widthPercentage;
+      } else {
+        return 0.75;
+      }
+    }
 
     /* putWord() processes each item on the list,
        calculate it's size and determine it's position, and actually
@@ -1193,7 +1299,9 @@ if (!window.clearImmediate) {
       var tryToPutWord = function(defaultFontSize) {
         var rotateDeg = getRotateDeg();
         // get info needed to put the text onto the canvas
-        var info = getTextInfo(word, weight, rotateDeg, true, defaultFontSize);
+        var lastIndexFontsize  = specialState.fontSizeList[index - 1]
+        var  _defaultFontSize = defaultFontSize || lastIndexFontsize
+        var info = getTextInfo(word, weight, rotateDeg, true, _defaultFontSize);
 
         lastFontSize = info.fontSize
         // not getting the info means we shouldn't be drawing this one.
@@ -1305,10 +1413,10 @@ if (!window.clearImmediate) {
     var putSpecialWord = function putSpecialWord(item, i) {
       // add center and four corners to default point list
       const _center = [center[0], center[1], 0];
-      var points = [_center].concat(corners.map(function(el) {
+      var points = [_center].concat(corners.map(function(k) {
+        var el = cornersMap[k];
         return [el[0], el[1], 0];
       }));
-
       var word, weight, attributes, highlight, index = i, lastFontSize;
       if (Array.isArray(item)) {
         word = item[0];
@@ -1323,8 +1431,19 @@ if (!window.clearImmediate) {
       var tryToPutSpecialWord = function(point, defaultFontSize) {
         // get info needed to put the text onto the canvas
         var rotateDeg = getRotateDeg();
-        var info = getTextInfo(word, weight, rotateDeg, false, defaultFontSize);
-
+        var calcFontSize = function() {
+          var minEdge = Math.min(ngx * g, ngy * g)
+          var _topHeight = specialState.topHeight || 0
+          var edgeSize = Math.min(minEdge * 0.45, (minEdge - _topHeight))
+          var lastIndexFontsize  = specialState.fontSizeList[index - 1] * (specialState.wordRatio[index] || 1)
+          var _initFontsize = lastIndexFontsize || Math.ceil(edgeSize)
+          console.log('lastIndexFontsize', lastIndexFontsize)
+          return index === 0 ? Math.ceil(options.maxFontSize) : _initFontsize 
+        }
+        var _defaultFontSize = defaultFontSize
+          ? defaultFontSize
+          : calcFontSize()
+        var info = getTextInfo(word, weight, rotateDeg, false, _defaultFontSize);
         lastFontSize = info.fontSize;
         // not getting the info means we shouldn't be drawing this one.
         if (!info) {
@@ -1346,47 +1465,9 @@ if (!window.clearImmediate) {
           }
         }
         var r = maxRadius + 1;
-        var countCharacters = function(str) {
-          let totalCount = 0;
-        
-          for (let i = 0; i < str.length; i++) {
-            const charCode = str.charCodeAt(i);
-            if (charCode >= 0x4E00 && charCode <= 0x9FFF) {
-              totalCount += 2; // 中文字符占用两个字节
-            } else {
-              totalCount += 1; // 非中文字符占用一个字节
-            }
-          }
-        
-          return totalCount;
-        }
-        var calculateWidthPercentage = function(str) {
-          var len = countCharacters(str)
-          var widthMapping = [
-            { characters: 4, widthPercentage: 0.55 },
-            { characters: 6, widthPercentage: 0.62 },
-            { characters: 8, widthPercentage: 0.80 },
-          ]
-          let closestEntry = null;
-          let closestDifference = Infinity;
-
-          // 查找映射表中最接近的字符数条目
-          for (const entry of widthMapping) {
-            const difference = Math.abs(len - entry.characters);
-            if (difference < closestDifference) {
-              closestDifference = difference;
-              closestEntry = entry;
-            }
-          }
-
-          if (closestEntry) {
-            return closestEntry.widthPercentage;
-          } else {
-            return 0.75;
-          }
-        }
         var tryToPutWordAtEdgePoint = function(gxy, index) {
-          var pointOffset = getSpecialPointOffset(info, index)
+          var key = corners[index - 1]
+          var pointOffset = getSpecialPointOffset(info, key)
           var gx = Math.floor(gxy[0] - pointOffset.x)
           var gy = Math.floor(gxy[1] - pointOffset.y)
           var gw = info.gw;
@@ -1434,11 +1515,9 @@ if (!window.clearImmediate) {
         return false
       }
       var point = points[index];
-      // init fontSize for special positions.
-      // set 3.6 is suitable for corner words
-      var _fz = i ===  0 ? undefined : options.maxFontSize
       var wordItem = tryToPutSpecialWord(point)
       if (wordItem) {
+        // options.maxFontSize = index === 0 ? options.maxFontSize : lastFontSize
         return wordItem
       } else {
         if (lastFontSize <= options.minFontSize) {
@@ -1447,7 +1526,8 @@ if (!window.clearImmediate) {
           while(!wordItem) {
             wordItem = tryToPutSpecialWord(point, lastFontSize)
             if (wordItem) {
-              options.maxFontSize = options.maxFontSize * settings.autoRatio
+              options.maxFontSize = index === 0 ? options.maxFontSize : lastFontSize
+              // options.maxFontSize = options.maxFontSize * settings.autoRatio
               return wordItem
             }
           }
@@ -1515,17 +1595,36 @@ if (!window.clearImmediate) {
       var rightTop = ngx > ngy ? [_ngOffset + ngy - 1, 0] : [ngx - 1, _ngOffset];
       var rightbottom = ngx > ngy ? [_ngOffset + ngy - 1, ngy - 1] : [ngx - 1, _ngOffset + ngx - 1];
       corners = [
-        leftTop,
-        leftBottom,
-        rightTop,
-        rightbottom
+        'leftTop',
+        'leftBottom',
+        'rightTop',
+        'rightbottom'
       ];
+      cornersMap = {
+        leftTop: leftTop,
+        leftBottom: leftBottom,
+        rightTop: rightTop,
+        rightbottom: rightbottom
+      }
       initMaxFontSize = options.maxFontSize;
       // Maxium radius to look for space
       maxRadius = Math.floor(Math.sqrt(ngx * ngx + ngy * ngy));
       /* Clear the canvas only if the clearCanvas is set,
          if not, update the grid to the current canvas state */
       grid = [];
+      specialState = initSpecialState();
+      var wordsSize = getSpecialWordSize()
+      var maxValue = Math.max.apply(null, wordsSize)
+      var maxIndex = wordsSize.findIndex(v => v === maxValue)
+      if (maxIndex === 0 && calculateVariance(wordsSize) > 20) {
+        corners = [
+          'leftTop',
+          'leftBottom',
+          'rightbottom',
+          'rightTop'
+        ];
+      }
+
 
       var gx, gy, i, cacheGrid;
       var startMaxFontSize = options.maxFontSize;
@@ -1701,8 +1800,20 @@ if (!window.clearImmediate) {
         var drawn;
         if (settings.enableSquareAdaptor && i < 5) {
           drawn = putSpecialWord(settings.list[i], i);
+          if (drawn) {
+            console.log(drawn.word, drawn.info.fontSize)
+            if (i === 0) {
+              specialState.topWidth = drawn.info.fillTextWidth
+              specialState.topHeight = drawn.info.fillTextHeight
+            } else {
+              specialState.fontSizeList[i] = drawn.info.fontSize
+            }
+          }
         } else if (!drawn) {
           drawn = putWord(settings.list[i], i);
+          if (drawn) {
+            console.log(drawn.word, drawn.info.fontSize)
+          }
         }
 
         var _topNSize = options.enableSquareAdaptor ? Math.min(30, options.list.length) : settings.topN + 1
@@ -1720,6 +1831,8 @@ if (!window.clearImmediate) {
           initMaxFontSize = options.maxFontSize
           _this.words = []
           grid = JSON.parse(JSON.stringify(cacheGrid))
+          specialState = initSpecialState()
+          console.log('need retry')
           i = 0
         } else {
           i++;

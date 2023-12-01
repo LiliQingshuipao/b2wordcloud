@@ -11,7 +11,7 @@
             height: 100%;
             position: relative;
         }
-        #chart, #chart2 {
+        #chart, #chart1 {
             width: 450px;
             height: 450px;
             margin: 0 auto
@@ -49,7 +49,10 @@
     <script src="dist/b2wordcloud.js"></script>
     <script>
         var mark = 0;
-        var list4 = [{"label":"防晒","value":"269"},{"label":"淡斑","value":"114"},{"label":"油皮","value":"86"},{"label":"质地","value":"70"},{"label":"肤感","value":"54"},{"label":"成膜","value":"45"},{"label":"夏天","value":"42"},{"label":"清爽","value":"39"},{"label":"美白","value":"39"},{"label":"成分","value":"35"},{"label":"日常","value":"33"},{"label":"烟酰胺","value":"27"},{"label":"混油","value":"26"},{"label":"抗氧化","value":"26"},{"label":"干皮","value":"25"},{"label":"不搓泥","value":"23"},{"label":"推开","value":"23"},{"label":"全波段","value":"21"},{"label":"黑色素","value":"19"},{"label":"温和","value":"18"},{"label":"高倍","value":"17"},{"label":"传明酸","value":"15"},{"label":"光泽感","value":"15"},{"label":"敏感肌","value":"13"},{"label":"不油腻","value":"11"}].map(v => {return [v.label, Number(v.value)]})
+        var dat1 = [{"label":"防晒","value":"269"},{"label":"淡斑","value":"114"},{"label":"干皮","value":"86"},{"label":"质地","value":"70"},{"label":"肤感","value":"54"},{"label":"成膜","value":"45"},{"label":"夏天","value":"42"},{"label":"清爽","value":"39"},{"label":"美白","value":"39"},{"label":"成分","value":"35"},{"label":"日常","value":"33"},{"label":"烟酰胺","value":"27"},{"label":"混油","value":"26"},{"label":"抗氧化","value":"26"},{"label":"干皮","value":"25"},{"label":"不搓泥","value":"23"},{"label":"推开","value":"23"},{"label":"全波段","value":"21"},{"label":"黑色素","value":"19"},{"label":"温和","value":"18"},{"label":"高倍","value":"17"},{"label":"传明酸","value":"15"},{"label":"光泽感","value":"15"},{"label":"敏感肌","value":"13"},{"label":"不油腻","value":"11"}]
+        var dat2 = [{"label":"补水","value":"19"},{"label":"蓝铜胜肽","value":"13"},{"label":"抗老","value":"8"},{"label":"玻尿酸","value":"6"},{"label":"保湿","value":"3"},{"label":"修护","value":"3"},{"label":"吸收","value":"2"},{"label":"提亮","value":"2"},{"label":"紧致","value":"2"},{"label":"屏障","value":"2"},{"label":"痘痘","value":"2"},{"label":"过敏","value":"2"},{"label":"晚上","value":"2"},{"label":"干皮","value":"2"},{"label":"熬夜","value":"2"},{"label":"修复","value":"2"},{"label":"祛痘","value":"1"},{"label":"细腻","value":"1"},{"label":"不油腻","value":"1"},{"label":"滋润","value":"1"},{"label":"长痘","value":"1"},{"label":"温和","value":"1"},{"label":"国货","value":"1"},{"label":"控油","value":"1"},{"label":"明显","value":"1"}]
+        var list4 = dat1.map(v => {return [v.label, Number(v.value)]})
+
         var squareOptions = {
             // renderer: 'div',
             list: list4,
@@ -60,7 +63,7 @@
             },
             autoFontSize: true,
             fontFamily: '微软雅黑',
-            gridSize: 5,
+            gridSize: 10,
             effect: 'equal',
             maxFontSize: 200,
             optimizedWordNum: 5,
@@ -73,23 +76,13 @@
             clientWidth: 450,
             enableSquareAdaptor: true,
             shape: 'square',
-            autoRatio: 0.95,
+            autoRatio: 0.9,
             shuffle: false,
             hover: function(item) {
                 // console.log(item)
             },
             color: function(){ return '#00bcbe' },
             click: function(a, b, c, index) {
-                wordCloud.dispatchAction({
-                    type: mark === index ? 'downplay' : 'highlight',
-                    dataIndex: index,
-                    keepAlive: true
-                })
-                if (mark != index) { 
-                    mark = index
-                } else {
-                    mark = -1
-                }
             }
         }
         var circleOptions = {  ...squareOptions, shape: 'circle', enableSquareAdaptor: false }
@@ -97,17 +90,21 @@
           var chart = document.getElementById("chart")
           chart.innerHTML = ''
           new B2wordcloud(chart, squareOptions)
+          var chart1 = document.getElementById("chart1")
+          chart1.innerHTML = ''
+          new B2wordcloud(chart1, { ...squareOptions, list:  dat2.map(v => {return [v.label, Number(v.value)]})})
         }
         var renderCircle = function () {
           var chart1 = document.getElementById("chart1")
           chart1.innerHTML = ''
+
           new B2wordcloud(chart1, circleOptions)
         }
         var render = function () {
           renderCircle()
           renderSquare()
         }
-        render()
+        // render()
     </script>
     <script>
       const button = document.getElementById('btn');

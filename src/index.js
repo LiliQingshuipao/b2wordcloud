@@ -285,7 +285,7 @@ export class B2wordcloud {
         if(option.list && option.list.length > 0){
             var min = option.list[option.list.length - 1 ][1]
             var max = option.list[0][1]
-            var max = option.enableSquareAdaptor && option.list[1] && option.list[1][1] ? option.list[1][1] : option.list[0][1]
+            var max = option.enableSquareAdaptor && option.list[5] && option.list[5][1] ? option.list[5][1] : option.list[0][1]
             if(max > min) {
                 option.weightFactor = function (size) {
                     if (option.effect === 'linerMap') {
